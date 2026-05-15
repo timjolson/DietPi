@@ -436,26 +436,66 @@ $GREEN_LINE"
 
 	Get_Fail2Ban_Status()
 	{
-		# Count unique banned IPs via iptables/nftables compatibility. Try iptables first,
-		# fall back to nft if available.
-		COUNTIPS=0
-		if command -v iptables >/dev/null 2>&1; then
+		Get_Fail2Ban_Status_Raw()
+		{
+			# # helper function so that we can run it with sudo in non-root mode without needing to export all the above functions and variables.
+			# # also is `dash` compatible
+
+			# Count unique banned IPs via iptables/nftables compatibility. Try iptables first,
+			# fall back to nft if available.
+			COUNTIPS=0
+			if command -v iptables >/dev/null 2>&1; then
 				COUNTIPS=$(iptables -L -n 2>/dev/null | awk '/REJECT/ {print $0}' | uniq -c | wc -l)
-		elif command -v nft >/dev/null 2>&1; then
+			elif command -v nft >/dev/null 2>&1; then
 				COUNTIPS=$(nft list ruleset 2>/dev/null | awk '/reject/ {print $0}' | uniq -c | wc -l)
-		fi
-		if [[ $COUNTIPS -eq 0 ]]; then
-				state="${aCOLOUR[$YELLOW]}No IP(s) Banned${COLOUR_RESET}"
+			else
+				return 1
+			fi
+			echo "$COUNTIPS"
+			return 0
+		}
+
+		COUNTIPS=0
+		if [ "$(id -u)" = "0" ]
+		then
+			# COUNTIPS="$(Get_Fail2Ban_Status_Raw 2>/dev/null || { echo "${aCOLOUR[$YELLOW]}No Fail2Ban status available" && return 0; })"
+			COUNTIPS="$(Get_Fail2Ban_Status_Raw 2>/dev/null || return 1)"
+			code=$?
 		else
-				if [[ COUNTIPS -gt 20 ]]; then
-						# RED
-						state="${aCOLOUR[$YELLOW]}$COUNTIPS IP(s) Banned${COLOUR_RESET}"
-				else
-						# generic color
-						state="${aCOLOUR[$GREY]}$COUNTIPS IP(s) Banned${COLOUR_RESET}"
-				fi
+			# Running as non-root: Fail silently without NOPASSWD to avoid password prompt, but print info instead
+			# COUNTIPS="$(sudo -n dash -c "$(declare -f Get_Fail2Ban_Status_Raw); Get_Fail2Ban_Status_Raw 2>&1" 2> /dev/null || \
+			# 	echo "${aCOLOUR[$YELLOW]}NOPASSWD sudo required to obtain Fail2Ban status")"
+			COUNTIPS="$(sudo -n dash -c "$(declare -f Get_Fail2Ban_Status_Raw); Get_Fail2Ban_Status_Raw 2>&1" 2> /dev/null || return 2)"
+			code=$?
 		fi
-		echo "$state"
+
+		case $code in 
+			0)
+				if [[ $COUNTIPS -eq 0 ]]; then
+					# zero bans can be suspicious - something may not be working correctly
+					stat="${aCOLOUR[$YELLOW]}No IP(s) Banned${COLOUR_RESET}"
+				else
+					if [[ COUNTIPS -gt 20 ]]; then
+						# high number of bans
+						stat="${aCOLOUR[$RED]}$COUNTIPS IP(s) Banned${COLOUR_RESET}"
+					else
+						# low number of bans
+						stat="${aCOLOUR[$GREY]}$COUNTIPS IP(s) Banned${COLOUR_RESET}"
+					fi
+				fi
+				;;
+			1)
+				stat="${aCOLOUR[$RED]}No Fail2Ban status available${COLOUR_RESET}"
+				;;
+			2)
+				stat="${aCOLOUR[$YELLOW]}NOPASSWD sudo required to obtain Fail2Ban status"
+				;;
+			*)
+				stat="${aCOLOUR[$RED]}Unknown state $COUNTIPS${COLOUR_RESET}"
+				;;
+		esac
+		
+		echo "$stat"
 	}
 
 	Get_Network_Usage()
