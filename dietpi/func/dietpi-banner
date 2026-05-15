@@ -299,12 +299,12 @@ $GREEN_LINE"
  ${aCOLOUR[$WHITE]}$1 $GREEN_SEPARATOR"
 	}
 
-	Print_Local_Ip()
+	Get_Local_Ip()
 	{
 		(( ${aENABLED[5]} )) || return 0
 		local iface=$(G_GET_NET -q iface)
 		local ip=$(G_GET_NET -q ip)
-		Print_Item_State "${aDESCRIPTION[5]}" "${ip:-Use dietpi-config to setup a connection} (${iface:-NONE})"
+		echo "${ip:-Use dietpi-config to setup a connection} (${iface:-NONE})"
 	}
 
 	Get_Cert_Status()
@@ -706,7 +706,7 @@ $GREEN_LINE"
 		# NIS/YP domainname
 		(( ${aENABLED[4]} )) && Print_Item_State "${aDESCRIPTION[4]}" "$(hostname -y 2>&1)"
 		# LAN IP
-		Print_Local_Ip
+		(( ${aENABLED[5]} )) && Print_Item_State "${aDESCRIPTION[5]}" "$(Get_Local_Ip 2>&1)"
 		# WAN IP + location info
 		(( ${aENABLED[6]} )) && Print_Item_State "${aDESCRIPTION[6]}" "$(G_GET_WAN_IP 2>&1)"
 		# DietPi-VPN connection status
@@ -864,7 +864,7 @@ NB: It is executed as bash script, so it needs to be in bash compatible syntax.
 	# Main Loop
 	#/////////////////////////////////////////////////////////////////////////////////////
 	case $INPUT in
-		0) Print_Header; Print_Local_Ip;;
+		0) Print_Header; Print_Item_State "${aDESCRIPTION[5]}" "$(Get_Local_Ip 2>&1)";;
 		1) Print_Banner;;
 		'') Menu_Main; Print_Banner;;
 		*) G_DIETPI-NOTIFY 1 "Invalid input \"$*\"\n\nUsage:$USAGE"; exit 1;;
