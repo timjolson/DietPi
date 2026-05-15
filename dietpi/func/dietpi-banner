@@ -333,7 +333,7 @@ $GREEN_LINE"
 			code=$?
 		else
 			# Running as non-root: Fail silently without NOPASSWD to avoid password prompt
-			stat=$(sudo -n dash -c "$(declare -f Print_Cert_Status); Print_Cert_Status 2>&1" 2> /dev/null)
+			stat=$(sudo -n dash -c "$(declare -f Get_Cert_Status_Raw); Get_Cert_Status_Raw 2>&1" 2> /dev/null)
 			code=$?
 		fi
 
@@ -346,7 +346,7 @@ $GREEN_LINE"
 				esac
 				;; # stat is valid
 			1) stat="${aCOLOUR[$RED]}No certificate found${COLOUR_RESET}" ;;
-			2) stat="${aCOLOUR[$YELLOW]}NOPASSWD sudo required to obtain cert status${COLOUR_RESET}" ;;
+			2) stat="${aCOLOUR[$YELLOW]}NOPASSWD sudo required${COLOUR_RESET}" ;;
 			*) stat="${aCOLOUR[$YELLOW]}Unable to obtain cert status${COLOUR_RESET}" ;;
 		esac
 		
@@ -509,7 +509,7 @@ $GREEN_LINE"
 				local netns="$1"
 				
 				# Use an array prefix so we can run commands either in a netns
-				# (ip netns exec <ns> ...) or the default namespace.
+				# (ip netns exec <ns> ...) or the default namespace, and with sudo if needed
 				local -a ns_cmd_prefix=() sudo_cmd_prefix=()
 				if [ "$(id -u)" -ne "0" ]; then
 					sudo_cmd_prefix+=(sudo -n)
@@ -518,15 +518,11 @@ $GREEN_LINE"
 				if [[ -n "$netns" ]]; then
 					ns_cmd_prefix+=(ip netns exec "$netns")
 				fi
-
-				# (( ${#sudo_cmd_prefix[@]} )) && echo "${sudo_cmd_prefix[@]}"
-				# (( ${#ns_cmd_prefix[@]} )) && echo "${ns_cmd_prefix[@]}"
 				
 				# Query interface list once inside the (optional) namespace and match names
 				mapfile -t observed_ifaces < <("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" ip -o link show 2>/dev/null | awk -F': ' '{print $2}')
 
 				for IFACE in "${observed_ifaces[@]}"; do
-					# echo "IFACE $IFACE"
 					# strip kernel-style peer suffix (e.g. eth0@if8) and use base name
 					local ifname="${IFACE%%@*}"
 					# skip loopback
@@ -579,37 +575,41 @@ $GREEN_LINE"
 				display_ns="$(G_TRUNCATE_MID "$raw_ns" 30)"
 
 				if [ "$(id -u)" = "0" ]; then
+					# Running as root, can call function directly
 					IP=$(G_GET_WAN_IP -t 1 -n "$ns" 2>&1)
 				else
-					# Get public IP
-					IP=$(sudo -n bash -c "$(declare -f G_GET_WAN_IP G_DIETPI_NOTIFY); G_GET_WAN_IP -t 1 -n \"$ns\" 2>&1")
+					# Running as non-root: Fail silently without NOPASSWD to avoid password prompt
+					# Get public IP, sourcing globals inside the sudo'd shell
+					# Pass namespace as positional arg to avoid expansion issues inside the subshell
+					IP=$(sudo -n bash -c '. /boot/dietpi/func/dietpi-globals >/dev/null 2>&1; G_GET_WAN_IP -t 1 -n "$1" 2>&1' _ "$ns")
 				fi
 
 				if [[ $IP =~ $IP_re ]]; then
-						# # If an IP is detected, extract just the IP portion (use BASH_REMATCH[0])
-						# IP="${BASH_REMATCH[0]}"
-						
-						# Valid IP detected, keep as-is and print with namespace
-						printf " %s%s [%s]%s\n" \
-							"${aCOLOUR[$BLUE]}" "$IP" "$display_ns" "$COLOUR_RESET"
+					# Valid IP detected, keep as-is and print with namespace
+					
+					# # Extract just the IP portion (use BASH_REMATCH[0]). Removes the geographic info.
+					# IP="${BASH_REMATCH[0]}"
+					
+					printf " %s%s [%s]%s\n" \
+						"${aCOLOUR[$BLUE]}" "$IP" "$display_ns" "$COLOUR_RESET"
 
 				elif [[ -z $IP ]]; then
-						# If the IP is empty, it likely means the namespace is disconnected or has no internet access. Print status message.
-						printf "%s %s %s %s%s%s\n" \
-							"${aCOLOUR[$RED]}" "Disconnected" "$GREEN_SEPARATOR" "${aCOLOUR[$WHITE]}" "$display_ns" "$COLOUR_RESET"
-						
+					# If the IP is empty, it likely means the namespace is disconnected or has no internet access. Print status message.
+					printf "%s %s %s %s%s%s\n" \
+						"${aCOLOUR[$RED]}" "Disconnected" "$GREEN_SEPARATOR" "${aCOLOUR[$WHITE]}" "$display_ns" "$COLOUR_RESET"
+					
 				else
-						if [[ $IP =~ $err_re ]]; then
-							# Treat known curl/network error messages as timeout/DNS failures
-							IP="Timeout/DNS Failure"
-						fi
+					if [[ $IP =~ $err_re ]]; then
+						# Treat known curl/network error messages as timeout/DNS failures
+						IP="Timeout/DNS Failure"
+					fi
 
-						# If the IP contains an unknown or error message, print it with the namespace
-						printf " %s%s [%s]%s\n" \
-							"${aCOLOUR[$YELLOW]}" "$IP" "$display_ns" "$COLOUR_RESET"
+					# If the IP contains an unknown or error message, print it with the namespace
+					printf " %s%s [%s]%s\n" \
+						"${aCOLOUR[$YELLOW]}" "$IP" "$display_ns" "$COLOUR_RESET"
 				fi
+				
 				DATA_USAGE "$ns"
-
 		done
 	}
 
