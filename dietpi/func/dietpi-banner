@@ -505,20 +505,6 @@ $GREEN_LINE"
 		# Common error substrings to detect timeouts / DNS failures (lowercase for case-insensitive check)
 		local err_re='timed out|timeout|could not resolve|not known|unknown'
 
-		interfaces=(
-			"eth0"  # Main wired interface
-			"eth1" # Main wireless interface
-			"lan0" # Main wireless interface
-			"lan1" # Secondary wireless interface
-			"wlan0" # Main wireless interface
-			"wlan1" # Secondary wireless interface
-			"tun0"  # Common VPN interface
-			"tun1"  # Another common VPN interface
-			"wg0"   # Common WireGuard interface
-			"wg1"   # Another common WireGuard interface
-			"vpn0"  # Another common VPN interface
-			"vpn1"  # Another common VPN interface
-		)
 		DATA_USAGE(){
 				local netns="$1"
 				
@@ -533,30 +519,54 @@ $GREEN_LINE"
 					ns_cmd_prefix+=(ip netns exec "$netns")
 				fi
 
-				# TODO: get the full `ip link show` then process it through a case statement that matches the interfaces array. This will be much faster than running `ip link show` for each interface.
-				for IFACE in "${interfaces[@]}"; do
-						if "${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" ip link show "$IFACE" > /dev/null 2>&1; then
-								local RX="N/A" TX="N/A" rx tx ip_addr ip_addr_cidr
+				# (( ${#sudo_cmd_prefix[@]} )) && echo "${sudo_cmd_prefix[@]}"
+				# (( ${#ns_cmd_prefix[@]} )) && echo "${ns_cmd_prefix[@]}"
+				
+				# Query interface list once inside the (optional) namespace and match names
+				mapfile -t observed_ifaces < <("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" ip -o link show 2>/dev/null | awk -F': ' '{print $2}')
 
-								if "${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" test -r "/sys/class/net/$IFACE/statistics/rx_bytes"; then
-									rx=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" cat "/sys/class/net/$IFACE/statistics/rx_bytes" 2>/dev/null || :)
-									[[ $rx =~ ^[0-9]+$ ]] && RX="$(awk -v v="$rx" 'BEGIN{printf "%.2f", v/(1024^3)}') GiB"
-								fi
+				for IFACE in "${observed_ifaces[@]}"; do
+					# echo "IFACE $IFACE"
+					# strip kernel-style peer suffix (e.g. eth0@if8) and use base name
+					local ifname="${IFACE%%@*}"
+					# skip loopback
+					[[ "$ifname" == lo ]] && continue
 
-								if "${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" test -r "/sys/class/net/$IFACE/statistics/tx_bytes"; then
-									tx=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" cat "/sys/class/net/$IFACE/statistics/tx_bytes" 2>/dev/null || :)
-									[[ $tx =~ ^[0-9]+$ ]] && TX="$(awk -v v="$tx" 'BEGIN{printf "%.2f", v/(1024^3)}') GiB"
-								fi
+					case "$ifname" in
+						# wired / predictable names
+						eth*|en*|ens*|enp*|lan*) handle_iface=1 ;;
+						# wireless
+						wlan*|wl*) handle_iface=1 ;;
+						# vpn/tunnel/virtual
+						tun*|wg*|vpn*) handle_iface=1 ;;
+						*) continue ;;
+					esac
 
-								ip_addr=" - No IP - "
-								ip_addr_cidr=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" ip -o -4 addr show dev "$IFACE" scope global 2>/dev/null | awk '{print $4}' | head -n1)
-								[[ -n "$ip_addr_cidr" ]] && ip_addr=${ip_addr_cidr%%/*}
+					if (( handle_iface )); then
+						local RX="N/A" TX="N/A" rx tx ip_addr ip_addr_cidr
 
-								if [[ "$RX" != "N/A" || "$TX" != "N/A" ]]; then
-									printf "%s %s%-20s %s%s  TX= %12s  RX= %12s%s\n" \
-										"$GREEN_BULLET" "${aCOLOUR[$GREY]}" "$ip_addr ($IFACE)" "$GREEN_SEPARATOR" "${aCOLOUR[$GREY]}" "$TX" "$RX" "$COLOUR_RESET"
-								fi
+						# Get RX data
+						if "${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" test -r "/sys/class/net/$ifname/statistics/rx_bytes"; then
+							rx=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" cat "/sys/class/net/$ifname/statistics/rx_bytes" 2>/dev/null || :)
+							[[ $rx =~ ^[0-9]+$ ]] && RX="$(awk -v v="$rx" 'BEGIN{printf "%.2f", v/(1024^3)}') GiB"
 						fi
+
+						# Get TX data
+						if "${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" test -r "/sys/class/net/$ifname/statistics/tx_bytes"; then
+							tx=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" cat "/sys/class/net/$ifname/statistics/tx_bytes" 2>/dev/null || :)
+							[[ $tx =~ ^[0-9]+$ ]] && TX="$(awk -v v="$tx" 'BEGIN{printf "%.2f", v/(1024^3)}') GiB"
+						fi
+
+						# Get IP address (IPv4, global scope) for this interface in this namespace. If multiple are present, just take the first. If none, show "- No IP -"
+						ip_addr=" - No IP - "
+						ip_addr_cidr=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" ip -o -4 addr show dev "$ifname" scope global 2>/dev/null | awk '{print $4}' | head -n1)
+						[[ -n "$ip_addr_cidr" ]] && ip_addr=${ip_addr_cidr%%/*}
+
+						if [[ "$RX" != "N/A" || "$TX" != "N/A" ]]; then
+							printf "%s %s%-20s %s%s  TX= %12s  RX= %12s%s\n" \
+								"$GREEN_BULLET" "${aCOLOUR[$GREY]}" "$ip_addr ($ifname)" "$GREEN_SEPARATOR" "${aCOLOUR[$GREY]}" "$TX" "$RX" "$COLOUR_RESET"
+						fi
+					fi
 				done
 		}
 
