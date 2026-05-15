@@ -521,35 +521,40 @@ $GREEN_LINE"
 		)
 		DATA_USAGE(){
 				local netns="$1"
+				
 				# Use an array prefix so we can run commands either in a netns
 				# (ip netns exec <ns> ...) or the default namespace.
-				local -a ip_cmd_prefix=()
+				local -a ns_cmd_prefix=() sudo_cmd_prefix=()
+				if [ "$(id -u)" -ne "0" ]; then
+					sudo_cmd_prefix+=(sudo -n)
+				fi
+
 				if [[ -n "$netns" ]]; then
-						ip_cmd_prefix=(ip netns exec "$netns")
+					ns_cmd_prefix+=(ip netns exec "$netns")
 				fi
 
 				# TODO: get the full `ip link show` then process it through a case statement that matches the interfaces array. This will be much faster than running `ip link show` for each interface.
 				for IFACE in "${interfaces[@]}"; do
-						if "${ip_cmd_prefix[@]}" ip link show "$IFACE" > /dev/null 2>&1; then
+						if "${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" ip link show "$IFACE" > /dev/null 2>&1; then
 								local RX="N/A" TX="N/A" rx tx ip_addr ip_addr_cidr
 
-								if "${ip_cmd_prefix[@]}" test -r "/sys/class/net/$IFACE/statistics/rx_bytes"; then
-										rx=$("${ip_cmd_prefix[@]}" cat "/sys/class/net/$IFACE/statistics/rx_bytes" 2>/dev/null || :)
-										[[ $rx =~ ^[0-9]+$ ]] && RX="$(awk -v v="$rx" 'BEGIN{printf "%.2f", v/(1024^3)}') GiB"
+								if "${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" test -r "/sys/class/net/$IFACE/statistics/rx_bytes"; then
+									rx=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" cat "/sys/class/net/$IFACE/statistics/rx_bytes" 2>/dev/null || :)
+									[[ $rx =~ ^[0-9]+$ ]] && RX="$(awk -v v="$rx" 'BEGIN{printf "%.2f", v/(1024^3)}') GiB"
 								fi
 
-								if "${ip_cmd_prefix[@]}" test -r "/sys/class/net/$IFACE/statistics/tx_bytes"; then
-										tx=$("${ip_cmd_prefix[@]}" cat "/sys/class/net/$IFACE/statistics/tx_bytes" 2>/dev/null || :)
-										[[ $tx =~ ^[0-9]+$ ]] && TX="$(awk -v v="$tx" 'BEGIN{printf "%.2f", v/(1024^3)}') GiB"
+								if "${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" test -r "/sys/class/net/$IFACE/statistics/tx_bytes"; then
+									tx=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" cat "/sys/class/net/$IFACE/statistics/tx_bytes" 2>/dev/null || :)
+									[[ $tx =~ ^[0-9]+$ ]] && TX="$(awk -v v="$tx" 'BEGIN{printf "%.2f", v/(1024^3)}') GiB"
 								fi
 
 								ip_addr=" - No IP - "
-								ip_addr_cidr=$("${ip_cmd_prefix[@]}" ip -o -4 addr show dev "$IFACE" scope global 2>/dev/null | awk '{print $4}' | head -n1)
+								ip_addr_cidr=$("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" ip -o -4 addr show dev "$IFACE" scope global 2>/dev/null | awk '{print $4}' | head -n1)
 								[[ -n "$ip_addr_cidr" ]] && ip_addr=${ip_addr_cidr%%/*}
 
 								if [[ "$RX" != "N/A" || "$TX" != "N/A" ]]; then
-										printf "%s %s%-20s %s%s  TX= %12s  RX= %12s%s\n" \
-												"$GREEN_BULLET" "${aCOLOUR[$GREY]}" "$ip_addr ($IFACE)" "$GREEN_SEPARATOR" "${aCOLOUR[$GREY]}" "$TX" "$RX" "$COLOUR_RESET"
+									printf "%s %s%-20s %s%s  TX= %12s  RX= %12s%s\n" \
+										"$GREEN_BULLET" "${aCOLOUR[$GREY]}" "$ip_addr ($IFACE)" "$GREEN_SEPARATOR" "${aCOLOUR[$GREY]}" "$TX" "$RX" "$COLOUR_RESET"
 								fi
 						fi
 				done
@@ -558,12 +563,17 @@ $GREEN_LINE"
 		mapfile -t namespaces < <(ip netns ls | awk 'NF>1 { print $1 }')
 		# Prepend an empty entry so the default (root) namespace can be handled in the loop
 		namespaces=( "" "${namespaces[@]}" )
+
 		for ns in "${namespaces[@]}"; do
 				raw_ns="${ns:-default}"
 				display_ns="$(G_TRUNCATE_MID "$raw_ns" 30)"
 
-				# Get public IP
-				IP=$(G_GET_WAN_IP -t 1 -n "$ns")
+				if [ "$(id -u)" = "0" ]; then
+					IP=$(G_GET_WAN_IP -t 1 -n "$ns" 2>&1)
+				else
+					# Get public IP
+					IP=$(sudo -n bash -c "$(declare -f G_GET_WAN_IP G_DIETPI_NOTIFY); G_GET_WAN_IP -t 1 -n \"$ns\" 2>&1")
+				fi
 
 				if [[ $IP =~ $IP_re ]]; then
 						# # If an IP is detected, extract just the IP portion (use BASH_REMATCH[0])
@@ -571,26 +581,25 @@ $GREEN_LINE"
 						
 						# Valid IP detected, keep as-is and print with namespace
 						printf " %s%s [%s]%s\n" \
-								"${aCOLOUR[$BLUE]}" "$IP" "$display_ns" "$COLOUR_RESET"
-						DATA_USAGE "$ns"
+							"${aCOLOUR[$BLUE]}" "$IP" "$display_ns" "$COLOUR_RESET"
 
 				elif [[ -z $IP ]]; then
 						# If the IP is empty, it likely means the namespace is disconnected or has no internet access. Print status message.
 						printf "%s %s %s %s%s%s\n" \
-								"${aCOLOUR[$RED]}" "Disconnected" "$GREEN_SEPARATOR" "${aCOLOUR[$WHITE]}" "$display_ns" "$COLOUR_RESET"
-						DATA_USAGE "$ns"
+							"${aCOLOUR[$RED]}" "Disconnected" "$GREEN_SEPARATOR" "${aCOLOUR[$WHITE]}" "$display_ns" "$COLOUR_RESET"
+						
 				else
 						if [[ $IP =~ $err_re ]]; then
-								# Treat known curl/network error messages as timeout/DNS failures
-								IP="Timeout/DNS Failure"
+							# Treat known curl/network error messages as timeout/DNS failures
+							IP="Timeout/DNS Failure"
 						fi
 
 						# If the IP contains an unknown or error message, print it with the namespace
 						printf " %s%s [%s]%s\n" \
-								"${aCOLOUR[$YELLOW]}" "$IP" "$display_ns" "$COLOUR_RESET"
-						DATA_USAGE "$ns"
+							"${aCOLOUR[$YELLOW]}" "$IP" "$display_ns" "$COLOUR_RESET"
 				fi
-				
+				DATA_USAGE "$ns"
+
 		done
 	}
 
@@ -819,7 +828,7 @@ NB: It is executed as bash script, so it needs to be in bash compatible syntax.
 			then
 				# Manage SPACE_BASE_PATTERNS list
 				while true; do
-					G_WHIP_MENU_ARRAY=( 'Add' 'Add a new pattern' 'Edit' 'Edit an existing pattern' 'Remove' 'Remove a pattern' 'Done' 'Return to previous menu' )
+					G_WHIP_MENU_ARRAY=( 'Add' 'Add a new pattern' 'Edit' 'Edit an existing pattern' 'Remove' 'Remove a pattern' 'Done' 'Finish pattern configuration' )
 					G_WHIP_DEFAULT_ITEM='Done'
 					G_WHIP_MENU 'Manage disk space match patterns.\nMount point targets listed by `df` command that match the patterns will be reported. : ' || break
 					case "$G_WHIP_RETURNED_VALUE" in
