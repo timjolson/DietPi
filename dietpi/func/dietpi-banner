@@ -307,18 +307,50 @@ $GREEN_LINE"
 		Print_Item_State "${aDESCRIPTION[5]}" "${ip:-Use dietpi-config to setup a connection} (${iface:-NONE})"
 	}
 
-	Print_Cert_Status()
+	Get_Cert_Status()
 	{
-		# Let's Encrypt cert status - MUST be run as root
-		local i
-		for i in /etc/letsencrypt/live/*/cert.pem
-		do
-			# shellcheck disable=SC2292
-			[ -f "$i" ] || continue
-			openssl x509 -enddate -noout -in "$i" | mawk '/notAfter=/{print "Valid until "$4"-"substr($1,10)"-"$2" "$3}'
-			return 0
-		done
-		echo 'No certificate found'
+		Get_Cert_Status_Raw()
+		{
+			# helper function so that we can run it with sudo in non-root mode without needing to export all the above functions and variables.
+			# also is `dash` compatible
+			local i
+			for i in /etc/letsencrypt/live/*/cert.pem
+			do
+				# shellcheck disable=SC2292
+				[ -f "$i" ] || continue
+				openssl x509 -enddate -noout -in "$i" | mawk '/notAfter=/{print "Valid until "$4"-"substr($1,10)"-"$2" "$3}'
+				return 0
+			done
+			return 1
+		}
+
+		stat=""
+		code=0
+		if [ "$(id -u)" = "0" ]
+		then
+			# Running as root
+			stat=$(Get_Cert_Status_Raw 2>/dev/null)
+			code=$?
+		else
+			# Running as non-root: Fail silently without NOPASSWD to avoid password prompt
+			stat=$(sudo -n dash -c "$(declare -f Print_Cert_Status); Print_Cert_Status 2>&1" 2> /dev/null)
+			code=$?
+		fi
+
+		case $code in
+			0) 
+				case "$stat" in
+					Valid*) stat="${aCOLOUR[$GREY]}$stat${COLOUR_RESET}" ;;
+					No\ certificate*) stat="${aCOLOUR[$RED]}$stat${COLOUR_RESET}" ;;
+					*) stat="${aCOLOUR[$YELLOW]}$stat${COLOUR_RESET}" ;;
+				esac
+				;; # stat is valid
+			1) stat="${aCOLOUR[$RED]}No certificate found${COLOUR_RESET}" ;;
+			2) stat="${aCOLOUR[$YELLOW]}NOPASSWD sudo required to obtain cert status${COLOUR_RESET}" ;;
+			*) stat="${aCOLOUR[$YELLOW]}Unable to obtain cert status${COLOUR_RESET}" ;;
+		esac
+		
+		echo "$stat"
 	}
 
 	Print_Credits()
@@ -646,18 +678,7 @@ $GREEN_LINE"
 		# Weather
 		(( ${aENABLED[9]} )) && Print_Item_State "${aDESCRIPTION[9]}" "$(curl -sSfLm 3 'https://wttr.in/?format=4' 2>&1)"
 		# Let's Encrypt cert status
-		if (( ${aENABLED[16]} ))
-		then
-			echo -en "$GREEN_BULLET ${aCOLOUR[$WHITE]}${aDESCRIPTION[16]} $GREEN_SEPARATOR "
-			if [[ $EUID == 0 ]]
-			then
-				# Running as root
-				Print_Cert_Status 2>&1
-			else
-				# Running as non-root: Fail silently without NOPASSWD to avoid password prompt, but print info instead
-				sudo -n dash -c "$(declare -f Print_Cert_Status); Print_Cert_Status 2>&1" 2> /dev/null || echo 'NOPASSWD sudo required to obtain cert status'
-			fi
-		fi
+		(( ${aENABLED[16]} )) && Print_Item_State "${aDESCRIPTION[16]}" "$(Get_Cert_Status 2>&1)"
 		# Systemd status
 		(( ${aENABLED[23]} )) && Print_Item_State "${aDESCRIPTION[23]}" "$(Get_Systemd_Status 2>&1)"
 		# Fail2Ban status
