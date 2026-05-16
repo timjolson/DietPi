@@ -2,7 +2,7 @@ DietPi Project Contribution
 =============================================
 
 #### Are you able to?:
-- Provide feedback and/or test areas of DietPi, to improve the user experience? [Contributing notes](https://github.com/MichaIng/DietPi#contributing)
+- Provide feedback and/or test areas of DietPi, to improve the user experience [Contributing notes](https://github.com/MichaIng/DietPi/blob/master/CONTRIBUTING.md)
 - Add another [software title](https://github.com/MichaIng/DietPi/wiki/How-to-add-a-new-software-title)
 - Report bugs using the [template](https://github.com/MichaIng/DietPi/issues/new?template=bug_report.md)
 - Compile software for our [supported platforms](https://dietpi.com/docs/hardware/)
