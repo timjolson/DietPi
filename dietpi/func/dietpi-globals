@@ -54,7 +54,7 @@
 	[[ -f '/boot/dietpi/.version' ]] && . /boot/dietpi/.version
 	# - Assign defaults/code version as fallback
 	[[ $G_DIETPI_VERSION_CORE ]] || G_DIETPI_VERSION_CORE=10
-	[[ $G_DIETPI_VERSION_SUB ]] || G_DIETPI_VERSION_SUB=4
+	[[ $G_DIETPI_VERSION_SUB ]] || G_DIETPI_VERSION_SUB=5
 	[[ $G_DIETPI_VERSION_RC ]] || G_DIETPI_VERSION_RC=-1
 	[[ $G_GITBRANCH ]] || G_GITBRANCH='master'
 	[[ $G_GITOWNER ]] || G_GITOWNER='MichaIng'
@@ -2026,7 +2026,7 @@ Press any key to continue...'
 	G_BACKUP_FP(){
 
 		local ainput_string=("$@")
-		local fp_db_log='/var/tmp/dietpi/logs/G_BACKUP_FP.db'
+		local fp_db_log='/var/lib/dietpi/logs/G_BACKUP_FP.db'
 		local print_fp_db_info=0
 
 		local i

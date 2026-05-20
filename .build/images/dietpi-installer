@@ -912,7 +912,7 @@ setenv rootuuid "true"' /boot/boot.cmd
 		G_DISTRO=$DISTRO_TARGET G_DISTRO_NAME=$DISTRO_TARGET_NAME G_HW_ARCH=$G_HW_ARCH G_HW_MODEL=$G_HW_MODEL G_RASPBIAN=$G_RASPBIAN HW_VARIANT=$HW_VARIANT G_EXEC /boot/dietpi/func/dietpi-set_software apt-mirror default
 
 		# (Re)create DietPi runtime and logs dir, used by G_AGx
-		G_EXEC mkdir -p /run/dietpi /var/tmp/dietpi/logs
+		G_EXEC mkdir -p /run/dietpi /var/lib/dietpi/logs
 
 		aPACKAGES_REQUIRED_INSTALL=()
 
@@ -970,6 +970,7 @@ _EOF_'
 			'locales'		# Support locales, used by dietpi-config > Language/Regional Options > Locale
 			'mawk'			# Minimal awk implementation
 			'nano'			# Simple text editor
+			'passwd'		# useradd/usermod/chpasswd/...
 			'parted'		# partprobe + drive partitioning, used by DietPi-Drive_Manager
 			'procps'		# "kill", "ps", "pgrep", "sysctl", used by several DietPi scripts
 			'psmisc'		# "killall", used by several DietPi scripts
@@ -1152,7 +1153,7 @@ _EOF_
 						*) model='rockpi-4b';;
 					esac;;
 				73) model='rockpi-s' kernel='rockchip64';;
-				74) model='radxa-zero';;
+				74) model='radxa-zero' kernel='meson64';;
 				76) kernel='rockchip64'
 					case $HW_VARIANT in
 						2) model='nanopi-r5c';;
@@ -1851,8 +1852,7 @@ _EOF_
 		#-----------------------------------------------------------------------------------
 		# Dirs
 		G_DIETPI-NOTIFY 2 'Generating DietPi directories'
-		G_EXEC mkdir -p /var/lib/dietpi/{postboot.d,dietpi-software/installed}
-		G_EXEC mkdir -p /var/tmp/dietpi/logs/dietpi-ramlog_store
+		G_EXEC mkdir -p /var/lib/dietpi/{postboot.d,dietpi-software/installed,logs/dietpi-ramlog_store}
 		G_EXEC mkdir -p /mnt/{dietpi_userdata,samba,ftp_client,nfs_client}
 		G_EXEC chgrp -R dietpi /mnt/{dietpi_userdata,samba,ftp_client,nfs_client}
 		G_EXEC find /mnt/{dietpi_userdata,samba,ftp_client,nfs_client} -type d -exec chmod 0775 {} +
@@ -2331,7 +2331,7 @@ _EOF_
 		rm -Rfv /lost+found/{,.}*
 
 		G_DIETPI-NOTIFY 2 'Clearing DietPi logs, written during install'
-		rm -Rfv /var/tmp/dietpi/logs/{,.}*
+		rm -Rfv /var/lib/dietpi/logs/{,.}*
 
 		if [[ -b $G_ROOTFS_DEV ]]
 		then
