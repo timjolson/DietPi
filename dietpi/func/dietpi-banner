@@ -39,7 +39,6 @@
 	# Globals
 	#/////////////////////////////////////////////////////////////////////////////////////
 	readonly FP_SAVEFILE='/boot/dietpi/.dietpi-banner'
-	readonly FP_CUSTOM='/boot/dietpi/.dietpi-banner_custom'
 	readonly FP_BANNERWRAP_AWK='/boot/dietpi/func/dietpi-banner-wrap.awk'
 
 	aDESCRIPTION=(
@@ -54,7 +53,7 @@
 		'Disk usage (RootFS)'
 		'Disk usage (userdata)'
 		'Weather (wttr.in)'
-		'Custom banner entry'
+		'Custom commands'
 		'Display DietPi useful commands?'
 		'MOTD'
 		'VPN status'
@@ -154,6 +153,9 @@
 	BW_INDENT_TYPE='colon'
 	BW_INDENT_FIXED=3
 
+	# Default custom command example
+	CUSTOM_COMMANDS[0]='echo "Hello World!"'
+
 	# Load settings here, to have chosen ${aCOLOUR[N]} applied to below strings
 	# shellcheck disable=SC1090
 	[[ -f $FP_SAVEFILE ]] && . "$FP_SAVEFILE"
@@ -229,9 +231,6 @@
 
 	Save()
 	{
-		# Custom entry description
-		echo "aDESCRIPTION[10]='${aDESCRIPTION[10]}'"
-
 		for i in "${!aDESCRIPTION[@]}"
 		do
 			echo "aENABLED[$i]=${aENABLED[$i]}"
@@ -255,6 +254,13 @@
 			patt=${SPACE_BASE_PATTERNS[$i]}
 			patt=${patt//\'/\\\'}
 			printf "SPACE_BASE_PATTERNS[%s]='%s'\n" "$i" "$patt"
+		done
+
+		# Persist CUSTOM_COMMANDS (indices 0..N)
+		for i in "${!CUSTOM_COMMANDS[@]}"; do
+			cmd=${CUSTOM_COMMANDS[$i]}
+			cmd=${cmd//\'/\\\'}
+			printf "CUSTOM_COMMANDS[%s]='%s'\n" "$i" "$cmd"
 		done
 
 		echo "BW_INDENT_TYPE='$BW_INDENT_TYPE'"
@@ -613,6 +619,17 @@ $GREEN_LINE"
 		done
 	}
 
+	Print_Custom_Commands()
+	{
+		for i in "${!CUSTOM_COMMANDS[@]}"; do
+			cmd="${CUSTOM_COMMANDS[$i]}"
+			if [[ -n "$cmd" ]]; then
+				# shellcheck disable=SC2086
+				echo $(eval "$cmd" 2>&1)
+			fi
+		done
+	}
+
 	Get_Disk_Usage()
 	{
 		# If no arguments are provided, default to '"/" "/mnt/*"'.
@@ -737,7 +754,7 @@ $GREEN_LINE"
 		# Weather
 		(( ${aENABLED[9]} )) && Print_Item_State "${aDESCRIPTION[9]}" "$(curl -sSfLm 3 'https://wttr.in/?format=4' 2>&1)"
 		# Let's Encrypt cert status
-		(( ${aENABLED[16]} )) && Print_Item_State "${aDESCRIPTION[16]}" "$(Get_Cert_Status 2>&1)"
+		(( ${aENABLED[16]} )) && Print_Item_State "Let's Encrypt Cert" "$(Get_Cert_Status 2>&1)"
 		# Systemd status
 		(( ${aENABLED[23]} )) && Print_Item_State "${aDESCRIPTION[23]}" "$(Get_Systemd_Status 2>&1)"
 		# Fail2Ban status
@@ -749,11 +766,11 @@ $GREEN_LINE"
 		# Disk Usage
 		(( ${aENABLED[22]} )) && echo "" && Print_Subheader "Disk Usage" && printf '%b\n' "$(Get_Disk_Usage "${SPACE_BASE_PATTERNS[@]}" 2>&1)"
 
-		# Separator line
-		(( ${aENABLED[10]} || ${aENABLED[11]} || ${aENABLED[12]} || ${aENABLED[15]} )) && echo -e "$GREEN_LINE"
+		# Custom commands
+		(( ${aENABLED[10]} )) && Print_Subheader "Custom Commands" && Print_Custom_Commands
 
-		# Custom entry
-		(( ${aENABLED[10]} )) && Print_Item_State "${aDESCRIPTION[10]}" "$(bash "$FP_CUSTOM" 2>&1)"
+		# Separator line
+		(( ${aENABLED[11]} || ${aENABLED[12]} || ${aENABLED[15]} )) && echo -e "$GREEN_LINE"
 
 		# MOTD
 		if (( ${aENABLED[12]} ))
@@ -806,17 +823,43 @@ $GREEN_LINE"
 
 			if (( $i == 10 ))
 			then
-				# Custom entry
-				[[ -f $FP_CUSTOM ]] && read -r G_WHIP_DEFAULT_ITEM < "$FP_CUSTOM" || G_WHIP_DEFAULT_ITEM='echo '\''Hello World!'\'
-				G_WHIP_INPUTBOX 'You have chosen to show a custom entry in the banner.
-Please enter the desired command here.\n
-NB: It is executed as bash script, so it needs to be in bash compatible syntax.
-    For multi-line or non-bash scripts, keep it separate and only add the script call here.' || continue
+				# Manage custom commands list
+				while true; do
+					G_WHIP_MENU_ARRAY=( 'Add' 'Add a new command' 'Edit' 'Edit an existing command' 'Remove' 'Remove a command' 'Done' 'Finish custom commands configuration' )
+					G_WHIP_DEFAULT_ITEM='Done'
+					G_WHIP_MENU 'Manage custom banner commands.\nExamples of sourcing go here. : ' || break
+					case "$G_WHIP_RETURNED_VALUE" in
+						Add)
+							G_WHIP_INPUTBOX 'Enter new command, for example :\necho "Hello World!"' || continue
+							CUSTOM_COMMANDS+=("$G_WHIP_RETURNED_VALUE")
+							;; 
+						Edit)
+							if (( ${#CUSTOM_COMMANDS[@]} == 0 )); then G_WHIP_MSG 'No commands to edit'; continue; fi
+							G_WHIP_MENU_ARRAY=()
+							for idx in "${!CUSTOM_COMMANDS[@]}"; do G_WHIP_MENU_ARRAY+=("$idx" "${CUSTOM_COMMANDS[$idx]}"); done
+							G_WHIP_MENU 'Select command to edit:' || continue
+							sel=$G_WHIP_RETURNED_VALUE
+							G_WHIP_DEFAULT_ITEM=${CUSTOM_COMMANDS[$sel]}
+							G_WHIP_INPUTBOX 'Edit command, for example :\necho "Hello World!"' || continue
+							CUSTOM_COMMANDS[$sel]="$G_WHIP_RETURNED_VALUE"
+							;; 
+						Remove)
+							if (( ${#CUSTOM_COMMANDS[@]} == 0 )); then G_WHIP_MSG 'No commands to remove'; continue; fi
+							G_WHIP_MENU_ARRAY=()
+							for idx in "${!CUSTOM_COMMANDS[@]}"; do G_WHIP_MENU_ARRAY+=("$idx" "${CUSTOM_COMMANDS[$idx]}"); done
+							G_WHIP_MENU 'Select command to remove:' || continue
+							sel=$G_WHIP_RETURNED_VALUE
+							unset 'CUSTOM_COMMANDS[$sel]'
+							# reindex array
+							CUSTOM_COMMANDS=("${CUSTOM_COMMANDS[@]}")
+							;; 
+						Done)
+							break
+						;;
+					esac
+				done
 
-				echo "$G_WHIP_RETURNED_VALUE" > "$FP_CUSTOM"
-
-				G_WHIP_DEFAULT_ITEM=${aDESCRIPTION[10]}
-				G_WHIP_INPUTBOX 'Please enter a meaningful name to be shown in front of your custom command output:' && aDESCRIPTION[10]=$G_WHIP_RETURNED_VALUE
+				(( ${#CUSTOM_COMMANDS[@]} == 0 )) && aENABLED[10]=0
 
 			elif (( $i == 19 ))
 			then
@@ -873,8 +916,6 @@ NB: It is executed as bash script, so it needs to be in bash compatible syntax.
 				done
 			fi
 		done
-
-		[[ -f $FP_CUSTOM ]] || aENABLED[10]=0
 
 		Save > "$FP_SAVEFILE"
 	}
