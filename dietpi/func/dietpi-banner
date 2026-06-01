@@ -41,6 +41,91 @@
 	readonly FP_SAVEFILE='/boot/dietpi/.dietpi-banner'
 	readonly FP_BANNERWRAP_AWK='/boot/dietpi/func/dietpi-banner-wrap.awk'
 
+	# ----------------------------------------------------------------------------
+	# Custom preferences initialisation helper (can be called by external scripts after
+	# sourcing this file). It loads the user-saved settings file
+	# ($FP_SAVEFILE) so custom colours, commands, and other preferences are applied before they are used.
+	# Usage: DIETPI_BANNER_LOAD_PREFS
+	# ----------------------------------------------------------------------------
+	DIETPI_BANNER_LOAD_PREFS()
+	{
+		declare -g COLOUR_RESET='\e[0m'
+		declare -gA aCOLOUR=(
+			[0]='\e[38;5;154m'	# DietPi green	| Lines, bullets and separators
+			[1]='\e[1m'			# Bold white	| Main descriptions
+			[2]='\e[90m'		# Grey			| Subdued text
+			[3]='\e[91m'		# Red			| Update notifications
+			[4]='\e[1;32m'      # Green         | Good state
+			[5]='\e[1;33m'      # Yellow        | Warning state
+			[6]='\e[1;36m'      # Blue          | Dynamic match
+
+			[DIETPI_GREEN]='\e[38;5;154m'
+			[GREY]='\e[90m'
+			[RED]='\e[91m'
+			[GREEN]='\e[1;32m'
+			[YELLOW]='\e[1;33m'
+			[BLUE]='\e[1;36m'
+			[GOLD]='\e[38;5;220m'
+			[PURPLE]='\e[38;5;141m'
+			[VIVID_RED]='\e[38;5;196m'
+			[CYANISH]='\e[38;5;45m'
+			[DARK_GREY_BG]='\e[48;5;236m'
+
+			[RESET]='\e[0m'
+			[BOLD]='\e[1m'
+			[DIM]='\e[2m'
+			[UNDERLINE]='\e[4m'
+			[INVERSE]='\e[7m'
+			[BLINK]='\e[5m'
+			[HIDDEN]='\e[8m'
+
+			[FG_BLACK]='\e[30m'
+			[FG_RED]='\e[31m'
+			[FG_GREEN]='\e[32m'
+			[FG_YELLOW]='\e[33m'
+			[FG_BLUE]='\e[34m'
+			[FG_MAGENTA]='\e[35m'
+			[FG_CYAN]='\e[36m'
+			[FG_WHITE]='\e[37m'
+
+			[BRIGHT_BLACK]='\e[90m'
+			[BRIGHT_RED]='\e[91m'
+			[BRIGHT_GREEN]='\e[92m'
+			[BRIGHT_YELLOW]='\e[93m'
+			[BRIGHT_BLUE]='\e[94m'
+			[BRIGHT_MAGENTA]='\e[95m'
+			[BRIGHT_CYAN]='\e[96m'
+			[BRIGHT_WHITE]='\e[97m'
+
+			[BG_BLACK]='\e[40m'
+			[BG_RED]='\e[41m'
+			[BG_GREEN]='\e[42m'
+			[BG_YELLOW]='\e[43m'
+			[BG_BLUE]='\e[44m'
+			[BG_MAGENTA]='\e[45m'
+			[BG_CYAN]='\e[46m'
+			[BG_WHITE]='\e[47m'
+
+			[BG_BRIGHT_BLACK]='\e[100m'
+			[BG_BRIGHT_RED]='\e[101m'
+			[BG_BRIGHT_GREEN]='\e[102m'
+			[BG_BRIGHT_YELLOW]='\e[103m'
+			[BG_BRIGHT_BLUE]='\e[104m'
+			[BG_BRIGHT_MAGENTA]='\e[105m'
+			[BG_BRIGHT_CYAN]='\e[106m'
+			[BG_BRIGHT_WHITE]='\e[107m'
+
+			[TRUE_GREEN]='\e[38;2;46;204;113m'
+			[TRUE_BG]='\e[48;2;44;62;80m'
+
+		)
+
+		# Load settings here, to have chosen ${aCOLOUR[N]} applied to below strings
+		# shellcheck disable=SC1090
+		[[ -f $FP_SAVEFILE ]] && . "$FP_SAVEFILE"
+	}
+
+
 	aDESCRIPTION=(
 
 		'Device model'
@@ -78,77 +163,6 @@
 		aENABLED=(1 0 1 0 0 1 0 0 0 0 0 1 1 0 0 1 0 0 0 0 0 0 0 0 0)
 	fi
 
-	COLOUR_RESET='\e[0m'
-	declare -A aCOLOUR=(
-		[0]='\e[38;5;154m'	# DietPi green	| Lines, bullets and separators
-        [1]='\e[1m'			# Bold white	| Main descriptions
-        [2]='\e[90m'		# Grey			| Subdued text
-        [3]='\e[91m'		# Red			| Update notifications
-        [4]='\e[1;32m'      # Green         | Good state
-        [5]='\e[1;33m'      # Yellow        | Warning state
-        [6]='\e[1;36m'      # Blue          | Dynamic match
-
-		[DIETPI_GREEN]='\e[38;5;154m'
-		[GREY]='\e[90m'
-		[RED]='\e[91m'
-		[GREEN]='\e[1;32m'
-		[YELLOW]='\e[1;33m'
-		[BLUE]='\e[1;36m'
-		[GOLD]='\e[38;5;220m'
-		[PURPLE]='\e[38;5;141m'
-		[VIVID_RED]='\e[38;5;196m'
-		[CYANISH]='\e[38;5;45m'
-		[DARK_GREY_BG]='\e[48;5;236m'
-
-		[RESET]='\e[0m'
-		[BOLD]='\e[1m'
-		[DIM]='\e[2m'
-		[UNDERLINE]='\e[4m'
-		[INVERSE]='\e[7m'
-		[BLINK]='\e[5m'
-		[HIDDEN]='\e[8m'
-
-		[FG_BLACK]='\e[30m'
-		[FG_RED]='\e[31m'
-		[FG_GREEN]='\e[32m'
-		[FG_YELLOW]='\e[33m'
-		[FG_BLUE]='\e[34m'
-		[FG_MAGENTA]='\e[35m'
-		[FG_CYAN]='\e[36m'
-		[FG_WHITE]='\e[37m'
-
-		[BRIGHT_BLACK]='\e[90m'
-		[BRIGHT_RED]='\e[91m'
-		[BRIGHT_GREEN]='\e[92m'
-		[BRIGHT_YELLOW]='\e[93m'
-		[BRIGHT_BLUE]='\e[94m'
-		[BRIGHT_MAGENTA]='\e[95m'
-		[BRIGHT_CYAN]='\e[96m'
-		[BRIGHT_WHITE]='\e[97m'
-
-		[BG_BLACK]='\e[40m'
-		[BG_RED]='\e[41m'
-		[BG_GREEN]='\e[42m'
-		[BG_YELLOW]='\e[43m'
-		[BG_BLUE]='\e[44m'
-		[BG_MAGENTA]='\e[45m'
-		[BG_CYAN]='\e[46m'
-		[BG_WHITE]='\e[47m'
-
-		[BG_BRIGHT_BLACK]='\e[100m'
-		[BG_BRIGHT_RED]='\e[101m'
-		[BG_BRIGHT_GREEN]='\e[102m'
-		[BG_BRIGHT_YELLOW]='\e[103m'
-		[BG_BRIGHT_BLUE]='\e[104m'
-		[BG_BRIGHT_MAGENTA]='\e[105m'
-		[BG_BRIGHT_CYAN]='\e[106m'
-		[BG_BRIGHT_WHITE]='\e[107m'
-
-		[TRUE_GREEN]='\e[38;2;46;204;113m'
-		[TRUE_BG]='\e[48;2;44;62;80m'
-
-	)
-
 	# Folding type (colon, dash, fixed), and fixed indent
 	BW_INDENT_TYPE='colon'
 	BW_INDENT_FIXED=3
@@ -156,22 +170,23 @@
 	# Default custom command example
 	CUSTOM_COMMANDS[0]='echo "Hello World!"'
 
-	# Load settings here, to have chosen ${aCOLOUR[N]} applied to below strings
-	# shellcheck disable=SC1090
-	[[ -f $FP_SAVEFILE ]] && . "$FP_SAVEFILE"
+	# Load user preferences
+	DIETPI_BANNER_LOAD_PREFS
 
 	# Index constants for aCOLOUR array (for readability when used in code below)
-	GREEN_BOLD=0
-	WHITE=1
-	GREY=2
-	RED=3
-	GREEN=4
-	YELLOW=5
-	BLUE=6
+	declare -g GREEN_BOLD=0
+	declare -g WHITE=1
+	declare -g GREY=2
+	declare -g RED=3
+	declare -g GREEN=4
+	declare -g YELLOW=5
+	declare -g BLUE=6
 
-	GREEN_LINE=" ${aCOLOUR[$GREEN_BOLD]}─────────────────────────────────────────────────────$COLOUR_RESET"
-	GREEN_BULLET=" ${aCOLOUR[$GREEN_BOLD]}-$COLOUR_RESET"
-	GREEN_SEPARATOR="${aCOLOUR[$GREEN_BOLD]}:$COLOUR_RESET"
+	# Derived convenience strings
+	declare -g GREEN_LINE=" ${aCOLOUR[$GREEN_BOLD]}─────────────────────────────────────────────────────$COLOUR_RESET"
+	declare -g GREEN_BULLET=" ${aCOLOUR[$GREEN_BOLD]}-$COLOUR_RESET"
+	declare -g GREEN_SEPARATOR="${aCOLOUR[$GREEN_BOLD]}:$COLOUR_RESET"
+
 
 	DIETPI_VERSION="$G_DIETPI_VERSION_CORE.$G_DIETPI_VERSION_SUB.$G_DIETPI_VERSION_RC"
 	if [[ $G_GITOWNER != 'MichaIng' ]]
