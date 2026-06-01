@@ -640,7 +640,7 @@ $GREEN_LINE"
 			cmd="${CUSTOM_COMMANDS[$i]}"
 			if [[ -n "$cmd" ]]; then
 				# shellcheck disable=SC2086
-				echo $(eval "$cmd" 2>&1)
+				echo $(eval "$cmd" 2>&1) || echo -e "${aCOLOUR[$RED]}Error executing custom command $((i+1))${COLOUR_RESET}"
 			fi
 		done
 	}
@@ -777,9 +777,9 @@ $GREEN_LINE"
 
 		# Network usage by namespace
 		# %b required so that percent symbols are not interpreted as format specifiers by printf
-		(( ${aENABLED[21]} )) && Print_Subheader "Network Traffic" && printf '%b' "$(Get_Network_Usage 2>&1)"
+		(( ${aENABLED[21]} )) && Print_Subheader "Network Traffic" && printf '%b\n' "$(Get_Network_Usage 2>&1)"
 		# Disk Usage
-		(( ${aENABLED[22]} )) && echo "" && Print_Subheader "Disk Usage" && printf '%b\n' "$(Get_Disk_Usage "${SPACE_BASE_PATTERNS[@]}" 2>&1)"
+		(( ${aENABLED[22]} )) && Print_Subheader "Disk Usage" && printf '%b\n' "$(Get_Disk_Usage "${SPACE_BASE_PATTERNS[@]}" 2>&1)"
 
 		# Custom commands
 		(( ${aENABLED[10]} )) && Print_Subheader "Custom Commands" && Print_Custom_Commands
@@ -845,7 +845,7 @@ $GREEN_LINE"
 					G_WHIP_MENU 'Manage custom banner commands.\nExamples of sourcing go here. : ' || break
 					case "$G_WHIP_RETURNED_VALUE" in
 						Add)
-							G_WHIP_INPUTBOX 'Enter new command, for example :\necho "Hello World!"' || continue
+							G_WHIP_INPUTBOX 'Enter new command, for example :\necho "Hello World!"\n\n-- or in color --\n\necho -e "${aCOLOUR[$GREEN]}Hello ${aCOLOUR[$RED]}World!"' || continue
 							CUSTOM_COMMANDS+=("$G_WHIP_RETURNED_VALUE")
 							;; 
 						Edit)
@@ -855,7 +855,7 @@ $GREEN_LINE"
 							G_WHIP_MENU 'Select command to edit:' || continue
 							sel=$G_WHIP_RETURNED_VALUE
 							G_WHIP_DEFAULT_ITEM=${CUSTOM_COMMANDS[$sel]}
-							G_WHIP_INPUTBOX 'Edit command, for example :\necho "Hello World!"' || continue
+							G_WHIP_INPUTBOX 'Edit command, for example :\necho "Hello World!"\n\n-- or in color --\n\necho -e "${aCOLOUR[$GREEN]}Hello ${aCOLOUR[$RED]}World!"' || continue
 							CUSTOM_COMMANDS[$sel]="$G_WHIP_RETURNED_VALUE"
 							;; 
 						Remove)
