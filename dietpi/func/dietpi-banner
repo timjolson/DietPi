@@ -914,6 +914,7 @@ $GREEN_LINE"
 						;;
 					esac
 				done
+				(( ${#SPACE_BASE_PATTERNS[@]} == 0 )) && aENABLED[22]=0
 			fi
 		done
 
