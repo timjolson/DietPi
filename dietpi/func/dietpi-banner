@@ -54,7 +54,7 @@
 			[0]='\e[38;5;154m'	# DietPi green	| Lines, bullets and separators
 			[1]='\e[1m'			# Bold white	| Main descriptions
 			[2]='\e[90m'		# Grey			| Subdued text
-			[3]='\e[91m'		# Red			| Update notifications
+			[3]='\e[91m'		# Red			| Update notifications / Bad state
 			[4]='\e[1;32m'      # Green         | Good state
 			[5]='\e[1;33m'      # Yellow        | Warning state
 			[6]='\e[1;36m'      # Blue          | Dynamic match
@@ -838,6 +838,8 @@ $GREEN_LINE"
 
 			if (( $i == 10 ))
 			then
+				example_command='echo -e "${aCOLOUR[GREEN]}Hello ${aCOLOUR[RED]}World!"\n\n-- or with the standard format --\n\nPrint_Item_State "Description" "value"'
+
 				# Manage custom commands list
 				while true; do
 					G_WHIP_MENU_ARRAY=( 'Add' 'Add a new command' 'Edit' 'Edit an existing command' 'Remove' 'Remove a command' 'Done' 'Finish custom commands configuration' )
@@ -845,7 +847,7 @@ $GREEN_LINE"
 					G_WHIP_MENU 'Manage custom banner commands.\nExamples of sourcing go here. : ' || break
 					case "$G_WHIP_RETURNED_VALUE" in
 						Add)
-							G_WHIP_INPUTBOX 'Enter new command, for example :\necho "Hello World!"\n\n-- or in color --\n\necho -e "${aCOLOUR[$GREEN]}Hello ${aCOLOUR[$RED]}World!"' || continue
+							G_WHIP_INPUTBOX "Enter new command, for example :\n$example_command" || continue
 							CUSTOM_COMMANDS+=("$G_WHIP_RETURNED_VALUE")
 							;; 
 						Edit)
@@ -855,7 +857,7 @@ $GREEN_LINE"
 							G_WHIP_MENU 'Select command to edit:' || continue
 							sel=$G_WHIP_RETURNED_VALUE
 							G_WHIP_DEFAULT_ITEM=${CUSTOM_COMMANDS[$sel]}
-							G_WHIP_INPUTBOX 'Edit command, for example :\necho "Hello World!"\n\n-- or in color --\n\necho -e "${aCOLOUR[$GREEN]}Hello ${aCOLOUR[$RED]}World!"' || continue
+							G_WHIP_INPUTBOX "Edit command, for example :\n$example_command" || continue
 							CUSTOM_COMMANDS[$sel]="$G_WHIP_RETURNED_VALUE"
 							;; 
 						Remove)
