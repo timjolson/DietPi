@@ -1,6 +1,7 @@
 #!/bin/bash
 {
 . /boot/dietpi/func/dietpi-globals || exit 1
+grep -q '^ID=raspbian' /etc/os-release && G_HW_ARCH_NAME='armv6l'
 Error_Exit(){ G_DIETPI-NOTIFY 1 "$1, aborting ..."; exit 1; }
 
 # Apply GitHub token if set
@@ -8,11 +9,12 @@ header=()
 [[ $GH_TOKEN ]] && header=('-H' "Authorization: token $GH_TOKEN")
 
 # APT dependencies
-adeps_build=('git' 'cmake' 'make' 'g++' 'libssl-dev' 'liblua5.3-dev' 'python3-dev' 'libsqlite3-dev' 'libboost-system-dev' 'libboost-thread-dev' 'libcurl4-openssl-dev' 'libusb-dev' 'libmosquitto-dev')
+adeps_build=('git' 'cmake' 'make' 'g++' 'libssl-dev' 'liblua5.3-dev' 'python3-dev' 'libsqlite3-dev' 'libboost-thread-dev' 'libcurl4-openssl-dev' 'libusb-dev' 'libmosquitto-dev')
 adeps=('libc6' 'libsqlite3-0' 'libusb-0.1-4' 'libmosquitto1')
 case $G_DISTRO in
-	7) adeps+=('libssl3' 'libcurl4');;
-	8|9) adeps+=('libssl3t64' 'libcurl4t64');;
+	7) adeps+=('libssl3' 'libcurl4'); adeps_build+=('libboost-system-dev');;
+	8) adeps+=('libssl3t64' 'libcurl4t64'); adeps_build+=('libboost-system-dev');;
+	9) adeps+=('libssl3t64' 'libcurl4t64');;
 	*) Error_Exit "Unsupported distro version: $G_DISTRO_NAME (ID=$G_DISTRO)";;
 esac
 
@@ -44,7 +46,10 @@ G_EXEC_OUTPUT=1 G_EXEC git clone --depth=1 --recurse-submodules --shallow-submod
 G_EXEC cd "$NAME"
 DIR="/tmp/${NAME}_$G_HW_ARCH_NAME"
 export CFLAGS='-g0 -O3' CXXFLAGS='-g0 -O3'
-G_EXEC_OUTPUT=1 G_EXEC cmake -B ../build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$DIR/opt/$NAME" -DDISABLE_UPDATER=1
+# Workaround for missing libatomic link on ARMv6
+libatomic=()
+[[ $G_HW_ARCH_NAME == 'armv6l' ]] && libatomic=('-DCMAKE_EXE_LINKER_FLAGS=-Wl,--push-state,--no-as-needed,-latomic,--pop-state')
+G_EXEC_OUTPUT=1 G_EXEC cmake -B ../build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$DIR/opt/$NAME" -DDISABLE_UPDATER=1 "${libatomic[@]}"
 G_EXEC_OUTPUT=1 G_EXEC make -C ../build "-j$(nproc)"
 [[ -d $DIR ]] && G_EXEC rm -R "$DIR"
 G_EXEC_OUTPUT=1 G_EXEC make -C ../build install
@@ -93,8 +98,8 @@ ExecStart=/opt/$NAME/$NAME -f /mnt/dietpi_userdata/$NAME/$NAME.conf
 
 # Hardening
 ProtectSystem=strict
-ProtectHome=true
-PrivateTmp=yes
+ProtectHome=1
+PrivateTmp=1
 ReadWritePaths=/mnt/dietpi_userdata/$NAME
 
 [Install]
@@ -109,6 +114,7 @@ then
 	if getent passwd $NAME > /dev/null
 	then
 		echo 'Configuring $PRETTY service user "$NAME" ...'
+		[ ~$NAME = '/mnt/dietpi_userdata/$NAME' ] || systemctl stop $NAME
 		usermod -aG dialout -d /mnt/dietpi_userdata/$NAME -s /usr/sbin/nologin $NAME
 	else
 		echo 'Creating $PRETTY service user "$NAME" ...'
