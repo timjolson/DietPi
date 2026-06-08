@@ -126,7 +126,6 @@
 		[[ -f $FP_SAVEFILE ]] && . "$FP_SAVEFILE"
 	}
 
-
 	aDESCRIPTION=(
 
 		'Device model'
@@ -189,7 +188,6 @@
 	declare -g GREEN_LINE=" ${aCOLOUR[DIETPI_GREEN]}─────────────────────────────────────────────────────$COLOUR_RESET"
 	declare -g GREEN_BULLET=" ${aCOLOUR[DIETPI_GREEN]}-$COLOUR_RESET"
 	declare -g GREEN_SEPARATOR="${aCOLOUR[DIETPI_GREEN]}:$COLOUR_RESET"
-
 
 	DIETPI_VERSION="$G_DIETPI_VERSION_CORE.$G_DIETPI_VERSION_SUB.$G_DIETPI_VERSION_RC"
 	if [[ $G_GITOWNER != 'MichaIng' ]]
