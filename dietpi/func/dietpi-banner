@@ -5,6 +5,7 @@
 	#
 	#////////////////////////////////////
 	# Created by Daniel Knight / daniel.knight@dietpi.com / dietpi.com
+	# Updated May 2026 by Tim Olson / timjolson@users.noreply.github.com
 	#
 	#////////////////////////////////////
 	#
@@ -68,8 +69,7 @@
 			[GOLD]='\e[38;5;220m'
 			[PURPLE]='\e[38;5;141m'
 			[VIVID_RED]='\e[38;5;196m'
-			[CYANISH]='\e[38;5;45m'
-			[DARK_GREY_BG]='\e[48;5;236m'
+			[CYAN]='\e[38;5;45m'
 
 			[RESET]='\e[0m'
 			[BOLD]='\e[1m'
@@ -105,6 +105,7 @@
 			[BG_MAGENTA]='\e[45m'
 			[BG_CYAN]='\e[46m'
 			[BG_WHITE]='\e[47m'
+			[BG_DARK_GREY]='\e[48;5;236m'
 
 			[BG_BRIGHT_BLACK]='\e[100m'
 			[BG_BRIGHT_RED]='\e[101m'
@@ -289,29 +290,29 @@
 		# DietPi update available?
 		if Check_DietPi_Update
 		then
-			local text_update_available_date="${aCOLOUR[$YELLOW]}Update available"
+			local text_update_available_date="${aCOLOUR[YELLOW]}Update available"
 
 		# New DietPi live patches available?
 		elif Check_DietPi_Live_Patches
 		then
-			local text_update_available_date="${aCOLOUR[$YELLOW]}New live patches available"
+			local text_update_available_date="${aCOLOUR[YELLOW]}New live patches available"
 
 		# APT update available?
 		elif Check_APT_Updates
 		then
-			local text_update_available_date="${aCOLOUR[$YELLOW]}$PACKAGE_COUNT APT updates available"
+			local text_update_available_date="${aCOLOUR[YELLOW]}$PACKAGE_COUNT APT updates available"
 
 		# Reboot required to finalise kernel upgrade?
 		elif Check_Reboot
 		then
-			local text_update_available_date="${aCOLOUR[$RED]}Reboot required"
+			local text_update_available_date="${aCOLOUR[RED]}Reboot required"
 		else
 			local locale=$(sed -n '/^[[:blank:]]*AUTO_SETUP_LOCALE=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
 			local text_update_available_date=$(LC_ALL=${locale:-C.UTF-8} date '+%R - %a %x')
 		fi
 
 		echo -e "$GREEN_LINE
- ${aCOLOUR[1]}DietPi v$DIETPI_VERSION$COLOUR_RESET $GREEN_SEPARATOR $text_update_available_date$COLOUR_RESET
+ ${aCOLOUR[WHITE]}DietPi v$DIETPI_VERSION$COLOUR_RESET $GREEN_SEPARATOR $text_update_available_date$COLOUR_RESET
 $GREEN_LINE"
 	}
 
@@ -319,7 +320,7 @@ $GREEN_LINE"
 	{
 		# ON THE CURRENT LINE Output green line separator with subheader title "$1"
 		echo -e "\r$GREEN_LINE
- ${aCOLOUR[$WHITE]}$1 $GREEN_SEPARATOR"
+ ${aCOLOUR[WHITE]}$1 $GREEN_SEPARATOR"
 	}
 
 	Get_Local_Ip()
@@ -363,14 +364,14 @@ $GREEN_LINE"
 		case $code in
 			0) 
 				case "$stat" in
-					Valid*) stat="${aCOLOUR[$GREY]}$stat${COLOUR_RESET}" ;;
-					No\ certificate*) stat="${aCOLOUR[$RED]}$stat${COLOUR_RESET}" ;;
-					*) stat="${aCOLOUR[$YELLOW]}$stat${COLOUR_RESET}" ;;
+					Valid*) stat="${aCOLOUR[GREY]}$stat${COLOUR_RESET}" ;;
+					No\ certificate*) stat="${aCOLOUR[RED]}$stat${COLOUR_RESET}" ;;
+					*) stat="${aCOLOUR[YELLOW]}$stat${COLOUR_RESET}" ;;
 				esac
 				;; # stat is valid
-			1) stat="${aCOLOUR[$RED]}No certificate found${COLOUR_RESET}" ;;
-			2) stat="${aCOLOUR[$YELLOW]}NOPASSWD sudo required${COLOUR_RESET}" ;;
-			*) stat="${aCOLOUR[$YELLOW]}Unable to obtain cert status${COLOUR_RESET}" ;;
+			1) stat="${aCOLOUR[RED]}No certificate found${COLOUR_RESET}" ;;
+			2) stat="${aCOLOUR[YELLOW]}NOPASSWD sudo required${COLOUR_RESET}" ;;
+			*) stat="${aCOLOUR[YELLOW]}Unable to obtain cert status${COLOUR_RESET}" ;;
 		esac
 		
 		echo "$stat"
@@ -378,7 +379,7 @@ $GREEN_LINE"
 
 	Print_Credits()
 	{
-		echo -e " ${aCOLOUR[$GREY]}DietPi Team     : https://github.com/MichaIng/DietPi#the-dietpi-project-team"
+		echo -e " ${aCOLOUR[GREY]}DietPi Team     : https://github.com/MichaIng/DietPi#the-dietpi-project-team"
 
 		[[ -f '/boot/dietpi/.prep_info' ]] && mawk 'NR==1 {sub(/^0$/,"DietPi Core Team");a=$0} NR==2 {print " Image by        : "a" (pre-image: "$0")"}' /boot/dietpi/.prep_info
 
@@ -393,32 +394,32 @@ $GREEN_LINE"
 		# DietPi update available?
 		if [[ $AVAILABLE_UPDATE ]]
 		then
-			echo -e " ${aCOLOUR[$WHITE]}dietpi-update$COLOUR_RESET   $GREEN_SEPARATOR ${aCOLOUR[$YELLOW]}Run now to update DietPi from v$DIETPI_VERSION to v$AVAILABLE_UPDATE$COLOUR_RESET\n"
+			echo -e " ${aCOLOUR[WHITE]}dietpi-update$COLOUR_RESET   $GREEN_SEPARATOR ${aCOLOUR[YELLOW]}Run now to update DietPi from v$DIETPI_VERSION to v$AVAILABLE_UPDATE$COLOUR_RESET\n"
 
 		# New DietPi live patches available?
 		elif (( $LIVE_PATCHES ))
 		then
-			echo -e " ${aCOLOUR[$WHITE]}dietpi-update$COLOUR_RESET   $GREEN_SEPARATOR ${aCOLOUR[$YELLOW]}Run now to check out new available DietPi live patches$COLOUR_RESET\n"
+			echo -e " ${aCOLOUR[WHITE]}dietpi-update$COLOUR_RESET   $GREEN_SEPARATOR ${aCOLOUR[YELLOW]}Run now to check out new available DietPi live patches$COLOUR_RESET\n"
 
 		# APT updates available?
 		elif (( $PACKAGE_COUNT ))
 		then
-			echo -e " ${aCOLOUR[$WHITE]}apt upgrade$COLOUR_RESET     $GREEN_SEPARATOR ${aCOLOUR[$YELLOW]}Run now to apply $PACKAGE_COUNT available APT package upgrades$COLOUR_RESET\n"
+			echo -e " ${aCOLOUR[WHITE]}apt upgrade$COLOUR_RESET     $GREEN_SEPARATOR ${aCOLOUR[YELLOW]}Run now to apply $PACKAGE_COUNT available APT package upgrades$COLOUR_RESET\n"
 
 		# Reboot required to finalise kernel upgrade?
 		elif (( $REBOOT_REQUIRED ))
 		then
-			echo -e " ${aCOLOUR[$WHITE]}reboot$COLOUR_RESET          $GREEN_SEPARATOR ${aCOLOUR[$RED]}A reboot is required to finalise a recent kernel upgrade$COLOUR_RESET\n"
+			echo -e " ${aCOLOUR[WHITE]}reboot$COLOUR_RESET          $GREEN_SEPARATOR ${aCOLOUR[RED]}A reboot is required to finalise a recent kernel upgrade$COLOUR_RESET\n"
 		fi
 	}
 
 	Print_Useful_Commands()
 	{
-		echo -e " ${aCOLOUR[$WHITE]}dietpi-launcher$COLOUR_RESET $GREEN_SEPARATOR All the DietPi programs in one place
- ${aCOLOUR[$WHITE]}dietpi-config$COLOUR_RESET   $GREEN_SEPARATOR Feature rich configuration tool for your device
- ${aCOLOUR[$WHITE]}dietpi-software$COLOUR_RESET $GREEN_SEPARATOR Select optimised software for installation
- ${aCOLOUR[$WHITE]}htop$COLOUR_RESET            $GREEN_SEPARATOR Resource monitor
- ${aCOLOUR[$WHITE]}cpu$COLOUR_RESET             $GREEN_SEPARATOR Shows CPU information and stats\n"
+		echo -e " ${aCOLOUR[WHITE]}dietpi-launcher$COLOUR_RESET $GREEN_SEPARATOR All the DietPi programs in one place
+ ${aCOLOUR[WHITE]}dietpi-config$COLOUR_RESET   $GREEN_SEPARATOR Feature rich configuration tool for your device
+ ${aCOLOUR[WHITE]}dietpi-software$COLOUR_RESET $GREEN_SEPARATOR Select optimised software for installation
+ ${aCOLOUR[WHITE]}htop$COLOUR_RESET            $GREEN_SEPARATOR Resource monitor
+ ${aCOLOUR[WHITE]}cpu$COLOUR_RESET             $GREEN_SEPARATOR Shows CPU information and stats\n"
 	}
 
 	Print_Item_State()
@@ -428,7 +429,7 @@ $GREEN_LINE"
         local subtitle="$1"
         local state="$2"
 		local width="${3:-}"
-		local color="${aCOLOUR[$WHITE]}"
+		local color="${aCOLOUR[WHITE]}"
         printf "%b%b %-${width}b %b %b\n" \
 			"$GREEN_BULLET" "${color}" "$subtitle" "$GREEN_SEPARATOR" "$state"
 	}
@@ -440,7 +441,7 @@ $GREEN_LINE"
         local subtitle="$1"
         local state="$2"
 		local width="${3:-}"
-		local color="${aCOLOUR[$GREY]}"
+		local color="${aCOLOUR[GREY]}"
         printf "%b%b %-${width}b %b %b\n" \
 			"$GREEN_BULLET" "${color}" "$subtitle" "$GREEN_SEPARATOR" "$state"
 	}
@@ -452,7 +453,7 @@ $GREEN_LINE"
 		if [[ -z "$FAILED_CNT" || "$FAILED_CNT" -eq 0 ]]; then
 			state="${aCOLOUR[GREY]}No Services Failed${COLOUR_RESET}"
 		else
-			state="${aCOLOUR[$RED]}$FAILED_CNT Service(s) Failed${COLOUR_RESET}"
+			state="${aCOLOUR[RED]}$FAILED_CNT Service(s) Failed${COLOUR_RESET}"
 		fi
 		echo "$state"
 	}
@@ -481,13 +482,10 @@ $GREEN_LINE"
 		COUNTIPS=0
 		if [ "$(id -u)" = "0" ]
 		then
-			# COUNTIPS="$(Get_Fail2Ban_Status_Raw 2>/dev/null || { echo "${aCOLOUR[$YELLOW]}No Fail2Ban status available" && return 0; })"
 			COUNTIPS="$(Get_Fail2Ban_Status_Raw 2>/dev/null || return 1)"
 			code=$?
 		else
-			# Running as non-root: Fail silently without NOPASSWD to avoid password prompt, but print info instead
-			# COUNTIPS="$(sudo -n dash -c "$(declare -f Get_Fail2Ban_Status_Raw); Get_Fail2Ban_Status_Raw 2>&1" 2> /dev/null || \
-			# 	echo "${aCOLOUR[$YELLOW]}NOPASSWD sudo required to obtain Fail2Ban status")"
+			# Running as non-root: Fail silently without NOPASSWD to avoid password prompt
 			COUNTIPS="$(sudo -n dash -c "$(declare -f Get_Fail2Ban_Status_Raw); Get_Fail2Ban_Status_Raw 2>&1" 2> /dev/null || return 2)"
 			code=$?
 		fi
@@ -496,29 +494,29 @@ $GREEN_LINE"
 			0)
 				if [[ $COUNTIPS -eq 0 ]]; then
 					# zero bans can be suspicious - something may not be working correctly
-					stat="${aCOLOUR[$YELLOW]}No IP(s) Banned${COLOUR_RESET}"
+					state="${aCOLOUR[YELLOW]}No IP(s) Banned${COLOUR_RESET}"
 				else
-					if [[ COUNTIPS -gt 20 ]]; then
+					if [[ $COUNTIPS -gt 20 ]]; then
 						# high number of bans
-						stat="${aCOLOUR[$RED]}$COUNTIPS IP(s) Banned${COLOUR_RESET}"
+						state="${aCOLOUR[RED]}$COUNTIPS IP(s) Banned${COLOUR_RESET}"
 					else
 						# low number of bans
-						stat="${aCOLOUR[$GREY]}$COUNTIPS IP(s) Banned${COLOUR_RESET}"
+						state="${aCOLOUR[GREY]}$COUNTIPS IP(s) Banned${COLOUR_RESET}"
 					fi
 				fi
 				;;
 			1)
-				stat="${aCOLOUR[$RED]}No Fail2Ban status available${COLOUR_RESET}"
+				state="${aCOLOUR[RED]}No Fail2Ban status available${COLOUR_RESET}"
 				;;
 			2)
-				stat="${aCOLOUR[$YELLOW]}NOPASSWD sudo required to obtain Fail2Ban status"
+				state="${aCOLOUR[YELLOW]}NOPASSWD sudo required to obtain Fail2Ban status${COLOUR_RESET}"
 				;;
 			*)
-				stat="${aCOLOUR[$RED]}Unknown state $COUNTIPS${COLOUR_RESET}"
+				state="${aCOLOUR[RED]}Unknown state $COUNTIPS${COLOUR_RESET}"
 				;;
 		esac
 		
-		echo "$stat"
+		echo "$state"
 	}
 
 	Get_Network_Usage()
@@ -583,7 +581,7 @@ $GREEN_LINE"
 
 						if [[ "$RX" != "N/A" || "$TX" != "N/A" ]]; then
 							printf "%s %s%-20s %s%s  TX= %12s  RX= %12s%s\n" \
-								"$GREEN_BULLET" "${aCOLOUR[$GREY]}" "$ip_addr ($ifname)" "$GREEN_SEPARATOR" "${aCOLOUR[$GREY]}" "$TX" "$RX" "$COLOUR_RESET"
+								"$GREEN_BULLET" "${aCOLOUR[GREY]}" "$ip_addr ($ifname)" "$GREEN_SEPARATOR" "${aCOLOUR[GREY]}" "$TX" "$RX" "$COLOUR_RESET"
 						fi
 					fi
 				done
@@ -614,12 +612,12 @@ $GREEN_LINE"
 					# IP="${BASH_REMATCH[0]}"
 					
 					printf " %s%s [%s]%s\n" \
-						"${aCOLOUR[$BLUE]}" "$IP" "$display_ns" "$COLOUR_RESET"
+						"${aCOLOUR[BLUE]}" "$IP" "$display_ns" "$COLOUR_RESET"
 
 				elif [[ -z $IP ]]; then
 					# If the IP is empty, it likely means the namespace is disconnected or has no internet access. Print status message.
 					printf "%s %s %s %s%s%s\n" \
-						"${aCOLOUR[$RED]}" "Disconnected" "$GREEN_SEPARATOR" "${aCOLOUR[$WHITE]}" "$display_ns" "$COLOUR_RESET"
+						"${aCOLOUR[RED]}" "Disconnected" "$GREEN_SEPARATOR" "${aCOLOUR[WHITE]}" "$display_ns" "$COLOUR_RESET"
 					
 				else
 					if [[ $IP =~ $err_re ]]; then
@@ -629,7 +627,7 @@ $GREEN_LINE"
 
 					# If the IP contains an unknown or error message, print it with the namespace
 					printf " %s%s [%s]%s\n" \
-						"${aCOLOUR[$YELLOW]}" "$IP" "$display_ns" "$COLOUR_RESET"
+						"${aCOLOUR[YELLOW]}" "$IP" "$display_ns" "$COLOUR_RESET"
 				fi
 				
 				DATA_USAGE "$ns"
@@ -642,7 +640,7 @@ $GREEN_LINE"
 			cmd="${CUSTOM_COMMANDS[$i]}"
 			if [[ -n "$cmd" ]]; then
 				# shellcheck disable=SC2086
-				echo $(eval "$cmd" 2>&1) || echo -e "${aCOLOUR[$RED]}Error executing custom command $((i+1))${COLOUR_RESET}"
+				echo $(eval "$cmd" 2>&1) || echo -e "${aCOLOUR[RED]}Error executing custom command $((i+1))${COLOUR_RESET}"
 			fi
 		done
 	}
@@ -717,7 +715,7 @@ $GREEN_LINE"
 			fi
 			# Print aligned columns: {basename} : {used} of {size} ({percent used})
 			printf "%s %s%-${length}s  %s%s %8sGiB of %8sGiB (%6b)%s\n" \
-					"$GREEN_BULLET" "${aCOLOUR[$BLUE]}" "$name" "$GREEN_SEPARATOR" "${aCOLOUR[$GREY]}" "$used_gb" "$size_gb" "$perc" "$COLOUR_RESET"
+					"$GREEN_BULLET" "${aCOLOUR[BLUE]}" "$name" "$GREEN_SEPARATOR" "${aCOLOUR[GREY]}" "$used_gb" "$size_gb" "$perc" "$COLOUR_RESET"
 		done
 
 	}
@@ -726,9 +724,9 @@ $GREEN_LINE"
 	{
 		local state="$( /boot/dietpi/dietpi-vpn status 2>&1 )"
 		case "$state" in
-			Connected*) state="${aCOLOUR[$GREEN]}$state${COLOUR_RESET}" ;;
-			Disconnected*) state="${aCOLOUR[$RED]}$state${COLOUR_RESET}" ;;
-			*) state="${aCOLOUR[$YELLOW]}$state${COLOUR_RESET}" ;;
+			Connected*) state="${aCOLOUR[GREY]}$state${COLOUR_RESET}" ;;
+			Disconnected*) state="${aCOLOUR[RED]}$state${COLOUR_RESET}" ;;
+			*) state="${aCOLOUR[YELLOW]}$state${COLOUR_RESET}" ;;
 		esac
 		echo "$state"
 	}
@@ -763,9 +761,9 @@ $GREEN_LINE"
 		# DietPi-VPN connection status
 		(( ${aENABLED[13]} )) && Print_Item_State "${aDESCRIPTION[13]}" "$(Get_VPN_Status 2>&1)"
 		# Disk usage (RootFS)
-		(( ${aENABLED[7]} )) && echo -e "$GREEN_BULLET ${aCOLOUR[$WHITE]}${aDESCRIPTION[7]} $GREEN_SEPARATOR $(df -h --output=used,size,pcent / | mawk 'NR==2 {print $1" of "$2" ("$3")"}' 2>&1)"
+		(( ${aENABLED[7]} )) && echo -e "$GREEN_BULLET ${aCOLOUR[WHITE]}${aDESCRIPTION[7]} $GREEN_SEPARATOR $(df -h --output=used,size,pcent / | mawk 'NR==2 {print $1" of "$2" ("$3")"}' 2>&1)"
 		# Disk usage (DietPi userdata)
-		(( ${aENABLED[8]} )) && echo -e "$GREEN_BULLET ${aCOLOUR[$WHITE]}${aDESCRIPTION[8]} $GREEN_SEPARATOR $(df -h --output=used,size,pcent /mnt/dietpi_userdata | mawk 'NR==2 {print $1" of "$2" ("$3")"}' 2>&1)"
+		(( ${aENABLED[8]} )) && echo -e "$GREEN_BULLET ${aCOLOUR[WHITE]}${aDESCRIPTION[8]} $GREEN_SEPARATOR $(df -h --output=used,size,pcent /mnt/dietpi_userdata | mawk 'NR==2 {print $1" of "$2" ("$3")"}' 2>&1)"
 		# Weather
 		(( ${aENABLED[9]} )) && Print_Item_State "${aDESCRIPTION[9]}" "$(curl -sSfLm 3 'https://wttr.in/?format=4' 2>&1)"
 		# Let's Encrypt cert status
