@@ -168,24 +168,26 @@
 	BW_INDENT_FIXED=3
 
 	# Default custom command example
-	CUSTOM_COMMANDS[0]='echo "Hello World!"'
+	CUSTOM_COMMANDS[0]='echo -e "${aCOLOUR[RED]}Hello ${aCOLOUR[GREEN]}World! ${COLOUR_RESET}:)"'
+	# Default disk patterns
+	SPACE_BASE_PATTERNS=("/" "/mnt/dietpi_userdata")
 
-	# Load user preferences
+	# Load user preferences, overriding the above defaults as needed
 	DIETPI_BANNER_LOAD_PREFS
 
-	# Index constants for aCOLOUR array (for readability when used in code below)
-	declare -g GREEN_BOLD=0
-	declare -g WHITE=1
-	declare -g GREY=2
-	declare -g RED=3
-	declare -g GREEN=4
-	declare -g YELLOW=5
-	declare -g BLUE=6
+	# Put loaded colors into the used slots
+	aCOLOUR[DIETPI_GREEN]=${aCOLOUR[0]}
+	aCOLOUR[WHITE]=${aCOLOUR[1]}
+	aCOLOUR[GREY]=${aCOLOUR[2]}
+	aCOLOUR[RED]=${aCOLOUR[3]}
+	aCOLOUR[GREEN]=${aCOLOUR[4]}
+	aCOLOUR[YELLOW]=${aCOLOUR[5]}
+	aCOLOUR[BLUE]=${aCOLOUR[6]}
 
 	# Derived convenience strings
-	declare -g GREEN_LINE=" ${aCOLOUR[$GREEN_BOLD]}─────────────────────────────────────────────────────$COLOUR_RESET"
-	declare -g GREEN_BULLET=" ${aCOLOUR[$GREEN_BOLD]}-$COLOUR_RESET"
-	declare -g GREEN_SEPARATOR="${aCOLOUR[$GREEN_BOLD]}:$COLOUR_RESET"
+	declare -g GREEN_LINE=" ${aCOLOUR[DIETPI_GREEN]}─────────────────────────────────────────────────────$COLOUR_RESET"
+	declare -g GREEN_BULLET=" ${aCOLOUR[DIETPI_GREEN]}-$COLOUR_RESET"
+	declare -g GREEN_SEPARATOR="${aCOLOUR[DIETPI_GREEN]}:$COLOUR_RESET"
 
 
 	DIETPI_VERSION="$G_DIETPI_VERSION_CORE.$G_DIETPI_VERSION_SUB.$G_DIETPI_VERSION_RC"
@@ -650,8 +652,6 @@ $GREEN_LINE"
 		# If no arguments are provided, default to '"/" "/mnt/*"'.
 		if (( $# > 0 )); then
 			SPACE_BASE_PATTERNS=("$@")
-		else
-			SPACE_BASE_PATTERNS=("/" "/mnt/*")
 		fi
 		
 		# TODO: is there a more efficient reader than df (stat?)
@@ -838,13 +838,13 @@ $GREEN_LINE"
 
 			if (( $i == 10 ))
 			then
-				example_command='echo -e "${aCOLOUR[GREEN]}Hello ${aCOLOUR[RED]}World!"\n\n-- or with the standard format --\n\nPrint_Item_State "Description" "value"'
+				example_command='echo -e "${aCOLOUR[RED]}Hello ${aCOLOUR[GREEN]}World! $COLOUR_RESET :)"\n\n-- or with the standard format --\n\nPrint_Item_State "Description" "value"'
 
 				# Manage custom commands list
 				while true; do
 					G_WHIP_MENU_ARRAY=( 'Add' 'Add a new command' 'Edit' 'Edit an existing command' 'Remove' 'Remove a command' 'Done' 'Finish custom commands configuration' )
 					G_WHIP_DEFAULT_ITEM='Done'
-					G_WHIP_MENU 'Manage custom banner commands.\nExamples of sourcing go here. : ' || break
+					G_WHIP_MENU 'Manage custom banner commands.\n\nCAUTION!\nThese commands are executed with the same privileges as dietpi-banner :' || break
 					case "$G_WHIP_RETURNED_VALUE" in
 						Add)
 							G_WHIP_INPUTBOX "Enter new command, for example :\n$example_command" || continue
@@ -896,31 +896,35 @@ $GREEN_LINE"
 
 			elif (( $i == 22 ))
 			then
+				pattern_hint="The matching mount 'target's returned by the 'df' command will be reported.
+To use regex, start the pattern with 're:', otherwise shell globbing is used.
+For example: '/mnt/*' or 're:^/mnt/.*/*$'"
+
 				# Manage SPACE_BASE_PATTERNS list
 				while true; do
 					G_WHIP_MENU_ARRAY=( 'Add' 'Add a new pattern' 'Edit' 'Edit an existing pattern' 'Remove' 'Remove a pattern' 'Done' 'Finish pattern configuration' )
 					G_WHIP_DEFAULT_ITEM='Done'
-					G_WHIP_MENU 'Manage disk space match patterns.\nMount point targets listed by `df` command that match the patterns will be reported. : ' || break
+					G_WHIP_MENU "Manage disk space match patterns. $pattern_hint" || break
 					case "$G_WHIP_RETURNED_VALUE" in
 						Add)
-							G_WHIP_INPUTBOX 'Enter new pattern (e.g. /mnt/* or re:^/mnt/.*/*$).\nTo use regex, start the pattern with `re:`, otherwise shell globbing is used. :' || continue
+							G_WHIP_INPUTBOX "Enter new pattern :\n$pattern_hint" || continue
 							SPACE_BASE_PATTERNS+=("$G_WHIP_RETURNED_VALUE")
 							;; 
 						Edit)
 							if (( ${#SPACE_BASE_PATTERNS[@]} == 0 )); then G_WHIP_MSG 'No patterns to edit'; continue; fi
 							G_WHIP_MENU_ARRAY=()
 							for idx in "${!SPACE_BASE_PATTERNS[@]}"; do G_WHIP_MENU_ARRAY+=("$idx" "${SPACE_BASE_PATTERNS[$idx]}"); done
-							G_WHIP_MENU 'Select pattern to edit:' || continue
+							G_WHIP_MENU 'Select pattern to edit :' || continue
 							sel=$G_WHIP_RETURNED_VALUE
 							G_WHIP_DEFAULT_ITEM=${SPACE_BASE_PATTERNS[$sel]}
-							G_WHIP_INPUTBOX 'Edit pattern:' || continue
+							G_WHIP_INPUTBOX "Edit pattern :\n$pattern_hint" || continue
 							SPACE_BASE_PATTERNS[$sel]="$G_WHIP_RETURNED_VALUE"
 							;; 
 						Remove)
 							if (( ${#SPACE_BASE_PATTERNS[@]} == 0 )); then G_WHIP_MSG 'No patterns to remove'; continue; fi
 							G_WHIP_MENU_ARRAY=()
 							for idx in "${!SPACE_BASE_PATTERNS[@]}"; do G_WHIP_MENU_ARRAY+=("$idx" "${SPACE_BASE_PATTERNS[$idx]}"); done
-							G_WHIP_MENU 'Select pattern to remove:' || continue
+							G_WHIP_MENU 'Select pattern to remove :' || continue
 							sel=$G_WHIP_RETURNED_VALUE
 							unset 'SPACE_BASE_PATTERNS[$sel]'
 							# reindex array
