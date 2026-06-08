@@ -350,7 +350,7 @@ $GREEN_LINE"
 
 		stat=""
 		code=0
-		if [ "$(id -u)" = "0" ]
+		if [[ "$(id -u)" = "0" ]]
 		then
 			# Running as root
 			stat=$(Get_Cert_Status_Raw 2>/dev/null)
@@ -362,7 +362,7 @@ $GREEN_LINE"
 		fi
 
 		case $code in
-			0) 
+			0)
 				case "$stat" in
 					Valid*) stat="${aCOLOUR[GREY]}$stat${COLOUR_RESET}" ;;
 					No\ certificate*) stat="${aCOLOUR[RED]}$stat${COLOUR_RESET}" ;;
@@ -373,7 +373,7 @@ $GREEN_LINE"
 			2) stat="${aCOLOUR[YELLOW]}NOPASSWD sudo required${COLOUR_RESET}" ;;
 			*) stat="${aCOLOUR[YELLOW]}Unable to obtain cert status${COLOUR_RESET}" ;;
 		esac
-		
+
 		echo "$stat"
 	}
 
@@ -434,18 +434,6 @@ $GREEN_LINE"
 			"$GREEN_BULLET" "${color}" "$subtitle" "$GREEN_SEPARATOR" "$state"
 	}
 
-	Print_Subitem_State()
-	{
-		# Print a single line subitem with green bullet, description "$1", green separator and state "$2"
-		# state should contain color and format codes as needed
-        local subtitle="$1"
-        local state="$2"
-		local width="${3:-}"
-		local color="${aCOLOUR[GREY]}"
-        printf "%b%b %-${width}b %b %b\n" \
-			"$GREEN_BULLET" "${color}" "$subtitle" "$GREEN_SEPARATOR" "$state"
-	}
-
 	Get_Systemd_Status()
 	{
 		# Print systemd overall status based on "systemctl --failed"
@@ -480,7 +468,7 @@ $GREEN_LINE"
 		}
 
 		COUNTIPS=0
-		if [ "$(id -u)" = "0" ]
+		if [[ "$(id -u)" = "0" ]]
 		then
 			COUNTIPS="$(Get_Fail2Ban_Status_Raw 2>/dev/null || return 1)"
 			code=$?
@@ -490,7 +478,7 @@ $GREEN_LINE"
 			code=$?
 		fi
 
-		case $code in 
+		case $code in
 			0)
 				if [[ $COUNTIPS -eq 0 ]]; then
 					# zero bans can be suspicious - something may not be working correctly
@@ -515,7 +503,7 @@ $GREEN_LINE"
 				state="${aCOLOUR[RED]}Unknown state $COUNTIPS${COLOUR_RESET}"
 				;;
 		esac
-		
+
 		echo "$state"
 	}
 
@@ -528,18 +516,18 @@ $GREEN_LINE"
 
 		DATA_USAGE(){
 				local netns="$1"
-				
+
 				# Use an array prefix so we can run commands either in a netns
 				# (ip netns exec <ns> ...) or the default namespace, and with sudo if needed
 				local -a ns_cmd_prefix=() sudo_cmd_prefix=()
-				if [ "$(id -u)" -ne "0" ]; then
+				if [[ "$(id -u)" -ne "0" ]]; then
 					sudo_cmd_prefix+=(sudo -n)
 				fi
 
 				if [[ -n "$netns" ]]; then
 					ns_cmd_prefix+=(ip netns exec "$netns")
 				fi
-				
+
 				# Query interface list once inside the (optional) namespace and match names
 				mapfile -t observed_ifaces < <("${sudo_cmd_prefix[@]}" "${ns_cmd_prefix[@]}" ip -o link show 2>/dev/null | awk -F': ' '{print $2}')
 
@@ -551,7 +539,7 @@ $GREEN_LINE"
 
 					case "$ifname" in
 						# wired / predictable names
-						eth*|en*|ens*|enp*|lan*) handle_iface=1 ;;
+						eth*|en*|lan*) handle_iface=1 ;;
 						# wireless
 						wlan*|wl*) handle_iface=1 ;;
 						# vpn/tunnel/virtual
@@ -595,7 +583,7 @@ $GREEN_LINE"
 				raw_ns="${ns:-default}"
 				display_ns="$(G_TRUNCATE_MID "$raw_ns" 30)"
 
-				if [ "$(id -u)" = "0" ]; then
+				if [[ "$(id -u)" = "0" ]]; then
 					# Running as root, can call function directly
 					IP=$(G_GET_WAN_IP -t 1 -n "$ns" 2>&1)
 				else
@@ -607,10 +595,10 @@ $GREEN_LINE"
 
 				if [[ $IP =~ $IP_re ]]; then
 					# Valid IP detected, keep as-is and print with namespace
-					
+
 					# # Extract just the IP portion (use BASH_REMATCH[0]). Removes the geographic info.
 					# IP="${BASH_REMATCH[0]}"
-					
+
 					printf " %s%s [%s]%s\n" \
 						"${aCOLOUR[BLUE]}" "$IP" "$display_ns" "$COLOUR_RESET"
 
@@ -618,7 +606,7 @@ $GREEN_LINE"
 					# If the IP is empty, it likely means the namespace is disconnected or has no internet access. Print status message.
 					printf "%s %s %s %s%s%s\n" \
 						"${aCOLOUR[RED]}" "Disconnected" "$GREEN_SEPARATOR" "${aCOLOUR[WHITE]}" "$display_ns" "$COLOUR_RESET"
-					
+
 				else
 					if [[ $IP =~ $err_re ]]; then
 						# Treat known curl/network error messages as timeout/DNS failures
@@ -629,7 +617,7 @@ $GREEN_LINE"
 					printf " %s%s [%s]%s\n" \
 						"${aCOLOUR[YELLOW]}" "$IP" "$display_ns" "$COLOUR_RESET"
 				fi
-				
+
 				DATA_USAGE "$ns"
 		done
 	}
@@ -651,7 +639,7 @@ $GREEN_LINE"
 		if (( $# > 0 )); then
 			SPACE_BASE_PATTERNS=("$@")
 		fi
-		
+
 		# TODO: is there a more efficient reader than df (stat?)
 		# Use df's output to parse numeric fields (kB units) for mounts matching the supplied patterns
 		length=0
@@ -662,21 +650,22 @@ $GREEN_LINE"
 				for pattern in "${SPACE_BASE_PATTERNS[@]}"; do
 						# If the user supplies a pattern prefixed with 're:' treat it as regex
 						if [[ "$pattern" == re:* ]]; then
-								re="${pattern#re:}"
-								if [[ $mnt_target =~ $re ]]; then
-										matched=1
-										basename=$(basename "$mnt_target")
-										break
-								fi
+							re="${pattern#re:}"
+							if [[ $mnt_target =~ $re ]]; then
+								matched=1
+								basename=$(basename "$mnt_target")
+								break
+							fi
 						else
-						# Otherwise, treat it as a shell glob pattern and match using "case"
-								case "$mnt_target" in
-										$pattern)
-												matched=1
-												basename=$(basename "$mnt_target")
-												break
-												;;
-								esac
+							# Otherwise, treat it as a shell glob pattern and match using "case"
+							case "$mnt_target" in
+								$pattern)
+									matched=1
+									basename=$(basename "$mnt_target")
+									break
+									;;
+								*) ;;
+							esac
 						fi
 				done
 				if (( matched )); then
@@ -847,7 +836,7 @@ $GREEN_LINE"
 						Add)
 							G_WHIP_INPUTBOX "Enter new command, for example :\n$example_command" || continue
 							CUSTOM_COMMANDS+=("$G_WHIP_RETURNED_VALUE")
-							;; 
+							;;
 						Edit)
 							if (( ${#CUSTOM_COMMANDS[@]} == 0 )); then G_WHIP_MSG 'No commands to edit'; continue; fi
 							G_WHIP_MENU_ARRAY=()
@@ -857,7 +846,7 @@ $GREEN_LINE"
 							G_WHIP_DEFAULT_ITEM=${CUSTOM_COMMANDS[$sel]}
 							G_WHIP_INPUTBOX "Edit command, for example :\n$example_command" || continue
 							CUSTOM_COMMANDS[$sel]="$G_WHIP_RETURNED_VALUE"
-							;; 
+							;;
 						Remove)
 							if (( ${#CUSTOM_COMMANDS[@]} == 0 )); then G_WHIP_MSG 'No commands to remove'; continue; fi
 							G_WHIP_MENU_ARRAY=()
@@ -867,10 +856,11 @@ $GREEN_LINE"
 							unset 'CUSTOM_COMMANDS[$sel]'
 							# reindex array
 							CUSTOM_COMMANDS=("${CUSTOM_COMMANDS[@]}")
-							;; 
+							;;
 						Done)
 							break
-						;;
+							;;
+						*) ;;
 					esac
 				done
 
@@ -907,7 +897,7 @@ For example: '/mnt/*' or 're:^/mnt/.*/*$'"
 						Add)
 							G_WHIP_INPUTBOX "Enter new pattern :\n$pattern_hint" || continue
 							SPACE_BASE_PATTERNS+=("$G_WHIP_RETURNED_VALUE")
-							;; 
+							;;
 						Edit)
 							if (( ${#SPACE_BASE_PATTERNS[@]} == 0 )); then G_WHIP_MSG 'No patterns to edit'; continue; fi
 							G_WHIP_MENU_ARRAY=()
@@ -917,7 +907,7 @@ For example: '/mnt/*' or 're:^/mnt/.*/*$'"
 							G_WHIP_DEFAULT_ITEM=${SPACE_BASE_PATTERNS[$sel]}
 							G_WHIP_INPUTBOX "Edit pattern :\n$pattern_hint" || continue
 							SPACE_BASE_PATTERNS[$sel]="$G_WHIP_RETURNED_VALUE"
-							;; 
+							;;
 						Remove)
 							if (( ${#SPACE_BASE_PATTERNS[@]} == 0 )); then G_WHIP_MSG 'No patterns to remove'; continue; fi
 							G_WHIP_MENU_ARRAY=()
@@ -927,10 +917,11 @@ For example: '/mnt/*' or 're:^/mnt/.*/*$'"
 							unset 'SPACE_BASE_PATTERNS[$sel]'
 							# reindex array
 							SPACE_BASE_PATTERNS=("${SPACE_BASE_PATTERNS[@]}")
-							;; 
+							;;
 						Done)
 							break
-						;;
+							;;
+						*) ;;
 					esac
 				done
 				(( ${#SPACE_BASE_PATTERNS[@]} == 0 )) && aENABLED[22]=0

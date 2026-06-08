@@ -1497,7 +1497,7 @@ Press any key to continue...'
 	# Print public IP address and location info
 	# - Optional arguments:
 	#	-t <timeout>: Set timeout in seconds, supports floats, default: 3
-	#   -n <namespace>: Run curl in the given network namespace, e.g. to obtain the WAN IP of a specific 
+	#   -n <namespace>: Run curl in the given network namespace, e.g. to obtain the WAN IP of a specific
 	#                     network namespace, default: empty (no namespace = the main default namespace)
 	G_GET_WAN_IP()
 	{
@@ -1516,7 +1516,7 @@ Press any key to continue...'
 			shift
 		done
 
-		if [ -n "$ns" ]; then
+		if [[ -n "$ns" ]]; then
 			echo $(ip netns exec "$ns" curl -sSfLm "$timeout" 'https://dietpi.com/geoip' 2>&1)
 		else
 			echo $(curl -sSfLm "$timeout" 'https://dietpi.com/geoip' 2>&1)

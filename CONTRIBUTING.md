@@ -30,7 +30,6 @@ The below guide should help contributors add or modify DietPi scripts under
 `/boot/dietpi` with minimal friction. It focuses on safe extension points,
 shared helpers, persistence conventions, and reviewer-friendly test plans.
 
-
 Branch workflow
 ---------------
 DietPi separates stable releases, pre-release testing and active development:
@@ -47,7 +46,6 @@ Guidance:
   - Existing install: run `dietpi-backup` first, then use `G_DEV_BRANCH beta` or `G_DEV_BRANCH dev` to switch.
 - Warnings: `dev` and `beta` can be unstable; avoid using them on critical systems. Always include a Test Plan and restore steps in PRs when testing pre-release branches.
 
-
 Core concepts
 -------------
 - Globals: scripts source `func/dietpi-globals` for shared helpers and
@@ -61,7 +59,6 @@ Core concepts
 - Safe system changes: use `G_EXEC` for any commands that modify the system so
   DietPi's error handling and reporting apply. Always validate root/write
   access using `G_CHECK_ROOT_USER` / `G_CHECK_ROOTFS_RW` where required.
-
 
 Helper functions (G_ helpers)
 -----------------------------
@@ -87,7 +84,6 @@ are the most useful ones for contributors and how to use them safely.
 - `G_WHIP_*` family — dialog and UI helpers (`G_WHIP_MENU`,
   `G_WHIP_CHECKLIST`, `G_WHIP_INPUTBOX`, `G_WHIP_YESNO`, `G_WHIP_VIEWFILE`).
   Prefer these for user interaction to maintain consistent UX and behavior.
-
 
 G_WHIP specifics
 ----------------
@@ -136,7 +132,6 @@ Usage hints:
 - Prefer the `G_` helpers over ad-hoc implementations to keep error handling
   consistent and reduce reviewer friction.
 
-
 Menu extension pattern (safe, minimal)
 --------------------------------------
 1. Add handler: implement `Menu_<Name>()` to present inputs (use `G_WHIP_*`),
@@ -148,7 +143,6 @@ Menu extension pattern (safe, minimal)
    when saving color slots if needed.
 4. Test: include interactive steps in your PR Test Plan (open menu, toggle,
    verify `cat /boot/dietpi/.<prog_settings>`).
-
 
 Practical snippets (quick reference)
 -----------------------------------
@@ -212,7 +206,6 @@ When adding banner items (e.g. `dietpi-banner`), follow this minimal pattern:
 - Persist: ensure `Save()` writes `aENABLED[index]=...` and any custom
   `aDESCRIPTION[...]` lines so the state survives restarts.
 
-
 Nested / multi-page menu pattern
 --------------------------------
 ```
@@ -245,5 +238,3 @@ Quick test:
 printf '%s\n' " - Example: Let's Encrypt cert status: https://example.com | long text to wrap" | mawk -v "MAXCOL=50" -v "INDENT_TYPE=colon" -v "INDENT_FIXED=3" -f "$FP_BANNERWRAP_AWK"
 ```
 See `func/dietpi-banner-wrap.awk` for full implementation details.
-
-
