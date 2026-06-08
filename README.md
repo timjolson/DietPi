@@ -29,6 +29,14 @@ Use `dietpi-services` to control which installed software has higher or lower pr
 
 The full list of code contributors can be viewed [here](https://github.com/MichaIng/DietPi/graphs/contributors).
 
+---
+
+### Contributing
+
+See the [Contributing Guide](https://github.com/MichaIng/DietPi?tab=contributing-ov-file)
+
+---
+
 ### Contributors
 
 #### [Micha](https://github.com/MichaIng)
@@ -136,31 +144,7 @@ Created the first DietPi image for NanoPi M3/T3.
 
 ---
 
-## Contributing
-
-Git coders, please use the active development branch: [dev](https://github.com/MichaIng/DietPi/tree/dev)
-
-- [How to add a new software title to DietPi-Software](https://github.com/MichaIng/DietPi/wiki/How-to-add-a-new-software-title)
-
-Are you able to:
-
-- Provide feedback and/or test areas of DietPi, to improve the user experience?
-- Report bugs?
-- Improve/add more features to the [DietPi website](https://github.com/MichaIng/DietPi-Website) or [documentation](https://github.com/MichaIng/DietPi-Website)?
-- Compile software for our supported SBCs?
-- Contribute to DietPi with programming on GitHub?
-- Suggest new software that we can add to the `dietpi-software` install system?
-
-If so, let us know!
-We are always looking for talented people who believe in the DietPi project, and, wish to contribute in any way you can.
-
-- Send us an email: <micha@dietpi.com>
-- Join our forum: <https://dietpi.com/forum/>
-- GitHub: <https://github.com/MichaIng/DietPi>
-
-Also read our [contribute page](https://dietpi.com/contribute.html) for an overview of way to support DietPi.
-
-## License
+### License
 
 DietPi Copyright (C) 2025 [Contributors](https://github.com/MichaIng/DietPi/graphs/contributors)
 - Email: <micha@dietpi.com>
@@ -177,6 +161,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>
+
+---
 
 ## Links
 
