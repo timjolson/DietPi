@@ -325,8 +325,8 @@ Available commands:
 		aSOFTWARE_DOCS[$software_id]='https://dietpi.com/docs/software/remote_desktop/#rustdesk-client'
 		aSOFTWARE_DEPS[$software_id]='6'
 		# - RISC-V & ARMv6: https://github.com/rustdesk/rustdesk/releases
-		# - ARMv7 since packages depend on non-t64 libraries
-		(( $G_HW_ARCH == 3 || $G_HW_ARCH == 10 )) || aSOFTWARE_AVAIL_G_HW_ARCH[$software_id,$G_HW_ARCH]=0
+		aSOFTWARE_AVAIL_G_HW_ARCH[$software_id,1]=0
+		aSOFTWARE_AVAIL_G_HW_ARCH[$software_id,11]=0
 
 		# Media Systems
 		#--------------------------------------------------------------------------------

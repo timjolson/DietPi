@@ -48,6 +48,7 @@ if test -n "${overlays}${user_overlays}"; then
 						setenv overlay_error "true"
 					fi
 				fi
+				break
 			fi
 		done
 	done
@@ -71,21 +72,6 @@ if test -n "${overlays}${user_overlays}"; then
 	if test "${overlay_error}" = "true"; then
 		echo "Error applying DT overlays, restoring original DT"
 		load "${devtype}" "${devnum}" "${fdt_addr_r}" "${prefix}dtb/${fdtfile}"
-	else
-		for pre in ${overlay_prefix}; do
-			if test -e "${devtype}" "${devnum}" "${prefix}dtb/${overlay_path}/overlay/${pre}-fixup.scr"; then
-				if load "${devtype}" "${devnum}" "${scriptaddr}" "${prefix}dtb/${overlay_path}/overlay/${pre}-fixup.scr"; then
-					echo "Applying kernel provided DT fixup script ${pre}-fixup.scr"
-					source "${scriptaddr}"
-				fi
-			fi
-		done
-		if test -e "${devtype}" "${devnum}" "${prefix}fixup.scr"; then
-			if load "${devtype}" "${devnum}" "${scriptaddr}" "${prefix}fixup.scr"; then
-				echo "Applying user provided DT fixup script fixup.scr"
-				source "${scriptaddr}"
-			fi
-		fi
 	fi
 fi
 

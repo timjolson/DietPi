@@ -452,7 +452,6 @@ _EOF_
 				fi
 			;;
 			10) G_WHIP_DEFAULT_ITEM=21 G_WHIP_MENU_ARRAY=(
-				'20' ': Virtual machine'
 				'21' ': Native PC'
 			);;
 			11) G_WHIP_DEFAULT_ITEM=81 G_WHIP_MENU_ARRAY=(
@@ -463,6 +462,7 @@ _EOF_
 		esac
 		G_WHIP_MENU_ARRAY+=(
 			'' '●─ Other '
+			'20' ': Virtual machine'
 			'75' ': Container image'
 			'22' ': Generic device'
 		)
@@ -1160,36 +1160,36 @@ _EOF_
 						*) model='nanopi-r5s';;
 					esac;;
 				77) model='rock-3a' kernel='rockchip64';;
-				78) model='rock-5b' kernel='rk35xx' branch='vendor';;
-				79) kernel='rk35xx' branch='vendor'
+				78) model='rock-5b' kernel='rockchip64';;
+				79) kernel='rockchip64'
 					case $HW_VARIANT in
 						2) model='nanopi-r6c';;
 						3) model='nanopct6';;
 						*) model='nanopi-r6s';;
 					esac;;
-				80) model='orangepi5' kernel='rk35xx' branch='vendor';;
-				82) model='orangepi5-plus' kernel='rk35xx' branch='vendor';;
+				80) model='orangepi5' kernel='rockchip64';;
+				82) model='orangepi5-plus' kernel='rockchip64';;
 				83) model='orangepizero3' kernel='sunxi64';;
-				85) model='rock-5a' kernel='rk35xx' branch='vendor';;
+				85) model='rock-5a' kernel='rockchip64';;
 				86) model='tinkerboard-2' kernel='rockchip64';;
 				87) model='orangepi3b' kernel='rockchip64';;
 				88) model='orangepizero2w' kernel='sunxi64';;
 				89) model='orangepi3-lts' kernel='sunxi64';;
 				90) model='radxa-zero3' kernel='rockchip64';;
 				91) model='orangepi5-max' kernel='rk35xx' branch='vendor';; # mainline Linux dts does not support onboard WiFi, and brcmfmac probably does neither
-				92) model='nanopi-m6' kernel='rk35xx' branch='vendor';;
-				93) model='orangepi5pro' kernel='rk35xx' branch='vendor';;
+				92) model='nanopi-m6' kernel='rockchip64';;
+				93) model='orangepi5pro' kernel='rockchip64';;
 				94) model='orangepi5-ultra' kernel='rk35xx' branch='vendor';; # mainline Linux dts does not support onboard WiFi, and brcmfmac probably does neither
 				95) model='orangepicm5' kernel='rk35xx' branch='vendor';;
 				96) model='orangepi-4a' kernel='sunxi64' branch='edge';;
 				99) model='orangepi3' kernel='sunxi64';;
 				100) model='nanopi-r3s' kernel='rockchip64';;
 				101) model='nanopi-r3s-lts' kernel='rockchip64';;
-				102) model='nanopi-r76s' kernel='rk35xx' branch='vendor';; # mainline U-Boot does not support eMMC boot, and vendor U-Boot does not support eMMC boot with mainline Linux either. It looks like U-Boot would (needs to) load the device tree from the eMMC Linux hardcoded path /boot/dtb/rockchip/rk3576-nanopi-r75s.dtb, and that needs to be from vendor kernel. Weird ...
-				103) model='nanopi-m5' kernel='rk35xx' branch='vendor';; # mainline Linux does not support UFS and the upper USB port
+				102) model='nanopi-r76s' kernel='rockchip64';;
+				103) model='nanopi-m5' kernel='rockchip64';;
 				104) model='nanopi-zero2' kernel='rk35xx' branch='vendor';;
 				105) model='orangepi4-lts' kernel='rockchip64';;
-				106) model='orangepi5b' kernel='rk35xx' branch='vendor';;
+				106) model='orangepi5b' kernel='rockchip64';;
 				*) G_DIETPI-NOTIFY 1 "Unknown hardware ID \"$G_HW_MODEL\". Aborting ..."; exit 1;;
 			esac
 
@@ -2037,7 +2037,7 @@ _EOF_'
 		then
 			/boot/dietpi/func/dietpi-set_hardware serialconsole enable ttyAML0
 
-		# Allwinner, StarFive, ROCK Pi S, NanoPi R76S/M5/Zero2 mainline
+		# Allwinner, StarFive, ROCK Pi S, RK3528/RK3576 mainline
 		elif [[ $kernel == 'sunxi' || $kernel == 'sunxi64' || $G_HW_MODEL =~ ^(73|81|84)$ || ( $G_HW_MODEL =~ ^(102|103|104)$ && $kernel == 'rockchip64' ) ]]
 		then
 			/boot/dietpi/func/dietpi-set_hardware serialconsole enable ttyS0
