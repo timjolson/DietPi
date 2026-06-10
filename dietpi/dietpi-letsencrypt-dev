@@ -13,6 +13,7 @@
     INPUT=$1
 
     readonly FP_RENEWAL='/etc/systemd/system/certbot-dev.service.d'
+    readonly FP_SETTINGS='/boot/dietpi/.dietpi-letsencrypt-dev'
 
     LETSENCRYPT_DOMAINS=$(sed -n '/^[[:blank:]]*SOFTWARE_PUBLIC_DOMAIN_NAME=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)
     [[ $LETSENCRYPT_DOMAINS ]] || LETSENCRYPT_DOMAINS='mydomain.org'
@@ -180,6 +181,7 @@ systemctl reload lighttpd'\'' > /etc/letsencrypt/renewal-hooks/deploy/dietpi-lig
             (( $services )) && /boot/dietpi/dietpi-services start
         fi
         # Do not modify global /boot/dietpi.txt from dev script. Only update production when running the production script.
+        # TODO: remove the condition once the script is fully operational
         if [[ "$FP_SETTINGS" == '/boot/dietpi/.dietpi-letsencrypt' ]]; then
             G_CONFIG_INJECT 'SOFTWARE_PUBLIC_DOMAIN_NAME=' "SOFTWARE_PUBLIC_DOMAIN_NAME=$primary_domain" /boot/dietpi.txt
         fi
@@ -232,8 +234,6 @@ _EOF_
         [[ -f '/var/www/nextcloud/config/config.php' ]] && G_EXEC sed --follow-symlinks -i "s|'http://localhost/nextcloud'|'https://$primary_domain/nextcloud'|" /var/www/nextcloud/config/config.php
         [[ -f '/var/www/owncloud/config/config.php' ]] && G_EXEC sed --follow-symlinks -i "s|'http://localhost/owncloud'|'https://$primary_domain/owncloud'|" /var/www/owncloud/config/config.php
     }
-
-    readonly FP_SETTINGS='/boot/dietpi/.dietpi-letsencrypt-dev'
 
     Read_Settings(){
         LETSENCRYPT_DOMAINS=$(mawk 'NR==1' "$FP_SETTINGS")
@@ -714,7 +714,6 @@ _EOF_
     #/////////////////////////////////////////////////////////////////////////////////////
     # Settings
     #/////////////////////////////////////////////////////////////////////////////////////
-    readonly FP_SETTINGS='/boot/dietpi/.dietpi-letsencrypt'
 
     Read_Settings(){
 
