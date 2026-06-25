@@ -294,6 +294,7 @@ $FP_SCRIPT	rpi_kernel_choice		<empty> Supported on Debian Bookworm or newer on R
 			103) all_components='nanopim5';;
 			104) all_components='nanopizero2';;
 			105) all_components='orangepi4lts';;
+			106) all_components='orangepi5b';;
 			*) :;;
 		esac
 		G_EXEC eval "echo 'deb https://dietpi.com/apt $G_DISTRO_NAME $components' > /etc/apt/sources.list.d/dietpi.list"
@@ -866,12 +867,12 @@ deb $INPUT_MODE_VALUE $G_DISTRO_NAME-backports main contrib non-free non-free-fi
 		G_EXEC chmod -x rootfs/boot/dietpi{.txt,/.??*,/func/dietpi-globals}
 
 		# Remount bootfs to /boot/firmware
-		findmnt -M /boot &> /dev/null && G_EXEC umount -l /boot
+		findmnt /boot &> /dev/null && G_EXEC umount -l /boot
 		G_EXEC umount rootfs
 		G_EXEC mkdir -p /boot/firmware
 		G_EXEC sed --follow-symlinks -i 's|[[:blank:]]/boot[[:blank:]]| /boot/firmware |' /etc/fstab
 		G_EXEC systemctl daemon-reload
-		findmnt -M /boot/firmware &> /dev/null || G_EXEC mount /boot/firmware
+		findmnt /boot/firmware &> /dev/null || G_EXEC mount /boot/firmware
 
 		# Show kernel choice dialogue: This installs the required kernel and firmware packages and allows to select optional kernel packages for other RPi models.
 		until INPUT_MODE_VALUE='dietpi-rpi-firmware-migration' RPi_Kernel_Choice; do G_WHIP_MSG '[ INFO ] A selection is required!'; done

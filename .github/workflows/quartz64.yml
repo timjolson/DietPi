@@ -97,7 +97,7 @@ jobs:
         label DietPi
         linux /boot/vmlinuz
         fdt /boot/rk3566-quartz64-a.dtb
-        append root=/dev/mmcblk0p1 rootfstype=ext4 rootwait fsck.repair=yes earlycon=uart8250,mmio32,0xfe660000 console=ttyS2,1500000n8 console=tty1 consoleblank=0 net.ifnames=0
+        append root=/dev/mmcblk0p1 rootfstype=ext4 rootwait fsck.repair=yes earlycon=uart8250,mmio32,0xfe660000 console=ttyS2,1500000n8 console=tty1 net.ifnames=0
         _EOF_
         cp firmware-quartz64a/boot/extlinux/extlinux.conf firmware-quartz64b/boot/extlinux/
         sed --follow-symlinks -i 's/quartz64-a.dtb/quartz64-b.dtb/' firmware-quartz64b/boot/extlinux/extlinux.conf

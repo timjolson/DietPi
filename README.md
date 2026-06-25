@@ -33,7 +33,7 @@ The full list of code contributors can be viewed [here](https://github.com/Micha
 
 #### [Micha](https://github.com/MichaIng)
 
-_Joined Q3 2017_
+_Joined 2017Q3_
 
 Project lead (20/02/2019 and onwards), source code contributor, bug fixes, software improvements, DietPi forum administrator.
 
@@ -41,27 +41,15 @@ Project lead (20/02/2019 and onwards), source code contributor, bug fixes, softw
 
 Project founder and previous project lead (19/02/2019 and previous), source code contributor and tester.
 
-#### [JohnVick](https://dietpi.com/forum/u/johnvick/summary)
-
-_Joined 2016-06-08_
-
-DietPi forum co-administrator, management, support, testing and valuable feedback.
-
-#### [sal666](https://github.com/sal666)
-
-_Joined 2017-07-26_
-
-Creator and maintainer of the first Clonezilla based installer images for x86_64 UEFI systems.
-
 #### [Joulinar](https://github.com/Joulinar)
 
-_Joined Q4 2019_
+_Joined 2019Q4_
 
 DietPi forum moderator, support, testing, bug reports + investigation and valuable feedback.
 
 #### [StephanStS](https://github.com/StephanStS)
 
-_Joined Q4 2019_
+_Joined 2019Q4_
 
 NanoPi image creator, tester and bug reports.
 
@@ -77,13 +65,11 @@ _Joined 2020-10-11_
 
 Source code contributor, creator of the [DietPi-Dashboard](https://github.com/ravenclaw900/DietPi-Dashboard) and many software implementations.
 
-#### [yumiris](https://github.com/yumiris)
+#### [JappeHallunken](https://github.com/JappeHallunken)
 
-_Joined 2018-04-16_
+_Joined 2022Q2_
 
-Creator and maintainer of the first [DietPi Hyper-V images](https://github.com/yumiris/DietPi.Hyper-V).
-
----
+Source code contributor, creator of the [DietPi-Dashboard](https://github.com/ravenclaw900/DietPi-Dashboard) and many software implementations.
 
 ### Collaborations
 
@@ -94,9 +80,25 @@ _Since 2016-09-02_
 Joint venture to bring you the ultimate Amiga experience on your SBC, running lightweight and optimised DietPi at its core:
 https://github.com/MichaIng/DietPi/issues/474
 
----
-
 ### Hall of Fame
+
+#### [JohnVick](https://dietpi.com/forum/u/johnvick/summary)
+
+_Joined 2016-06-08_
+
+DietPi forum co-administrator, management, support, testing and valuable feedback.
+
+#### [sal666](https://github.com/sal666)
+
+_Joined 2017-07-26_
+
+Creator and maintainer of the first Clonezilla based installer images for x86_64 UEFI systems.
+
+#### [yumiris](https://github.com/yumiris)
+
+_Joined 2018-04-16_
+
+Creator and maintainer of the first [DietPi Hyper-V images](https://github.com/yumiris/DietPi.Hyper-V).
 
 #### [K-Plan](https://github.com/k-plan)
 
@@ -133,8 +135,6 @@ Contributions to the DietPi in general, including source code and VirtualBox ima
 _Joined 2016-10-01_
 
 Created the first DietPi image for NanoPi M3/T3.
-
----
 
 ## Contributing
 
@@ -188,12 +188,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>
 ### DietPi Files
 
 - All files located in (recursively):
-  - `/var/lib/dietpi/`
-  - `/var/tmp/dietpi/`
   - `/boot/dietpi/`
+  - `/var/lib/dietpi/`
 - `/boot/dietpi.txt`
 - `/boot/firmware/config.txt` (RPi)
 - `/boot/boot.ini` (Odroid)
+- `/boot/dietpiEnv.ini` (other SBCs)
 - All files prefixed with: `dietpi-`
 
 > The above GPLv2 documentation also applies to all mentioned files!
@@ -303,7 +303,7 @@ Links to hardware and software manufacturers, sources and build instructions use
 - [Snapcast](https://github.com/snapcast/snapcast)
 - [K3s](https://github.com/k3s-io/k3s)
 - [Synapse](https://github.com/matrix-org/synapse)
-- [youtube-dl](https://github.com/ytdl-org/youtube-dl)
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp)
 - [PostgreSQL](https://git.postgresql.org/gitweb/?p=postgresql.git)
 - [OpenJDK](https://github.com/openjdk)
 - [Blynk Server](https://github.com/Peterkn2001/blynk-server)

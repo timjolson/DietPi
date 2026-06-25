@@ -39,7 +39,7 @@ fi
 # v7.7
 if (( $G_DIETPI_VERSION_CORE < 7 || ( $G_DIETPI_VERSION_CORE == 7 && $G_DIETPI_VERSION_SUB < 7 ) ))
 then
-	if [[ $G_HW_ARCH == 10 && $(findmnt -Ufnro FSTYPE -M /boot) == 'vfat' ]]
+	if [[ $G_HW_ARCH == 10 && $(findmnt -Ufnro FSTYPE /boot) == 'vfat' ]]
 	then
 		G_DIETPI-NOTIFY 2 'Creating kernel upgrade hook to remove existing files from /boot FAT partition before installing the new files: https://github.com/MichaIng/DietPi/issues/4788'
 		G_EXEC mkdir -p /etc/kernel/preinst.d
@@ -672,6 +672,13 @@ _EOF_'
 			G_EXEC rm -f /etc/apt/sources.list.d/grafana.list
 		fi
 	fi
+fi
+
+# v10.4
+if (( $G_DIETPI_VERSION_CORE < 10 || ( $G_DIETPI_VERSION_CORE == 10 && $G_DIETPI_VERSION_SUB < 4 ) ))
+then
+	G_DIETPI-NOTIFY 2 'Pre-creating new persistent DietPi logs directory'
+	G_EXEC mkdir -p /var/lib/dietpi/logs
 fi
 
 exit 0

@@ -43,7 +43,7 @@
 	G_HW_ARCH_NAME=$(uname -m)
 	G_HW_CPUID=0
 	G_HW_CPU_CORES=$(nproc --all)
-	G_ROOTFS_DEV=$(findmnt -Ufvnro SOURCE -M /)
+	G_ROOTFS_DEV=$(findmnt -Ufvnro SOURCE /)
 	G_DISTRO=0
 	G_DISTRO_NAME='Unknown'
 	G_HW_REVISION=
@@ -173,6 +173,7 @@
 			local model # in case we want to read the revision from /proc/device-tree/model
 
 			case $G_HW_MODEL in
+				106) G_HW_MODEL_NAME='Orange Pi 5B' G_HW_CPUID=11;;
 				105) G_HW_MODEL_NAME='Orange Pi 4 LTS' G_HW_CPUID=3;;
 				104) G_HW_MODEL_NAME='NanoPi Zero2';;
 				103) G_HW_MODEL_NAME='NanoPi M5' G_HW_CPUID=12;;

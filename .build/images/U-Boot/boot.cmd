@@ -9,7 +9,6 @@
 setenv rootdev "/dev/mmcblk0p1"
 setenv rootfstype "ext4"
 setenv consoleargs "console=tty1"
-setenv docker_optimizations "off"
 
 # Load addresses
 setenv scriptaddr "0x32000000"
@@ -25,10 +24,7 @@ if load "${devtype}" "${devnum}" "${scriptaddr}" "${prefix}dietpiEnv.txt"; then
 fi
 
 # Define kernel command-line arguments
-setenv bootargs "root=${rootdev} rootfstype=${rootfstype} rootwait ${consoleargs} consoleblank=0 coherent_pool=2M ubootpart=${ubootpart} ${extraargs}"
-
-# Add bootargs for Docker
-if test "${docker_optimizations}" = "on"; then setenv bootargs "${bootargs} cgroup_enable=memory"; fi
+setenv bootargs "root=${rootdev} rootfstype=${rootfstype} rootwait ${consoleargs} coherent_pool=2M ubootpart=${ubootpart} ${extraargs}"
 
 # Load device tree and apply overlays
 load "${devtype}" "${devnum}" "${fdt_addr_r}" "${prefix}dtb/${fdtfile}"
@@ -41,8 +37,18 @@ if test -n "${overlays}${user_overlays}"; then
 			if test -e  "${devtype}" "${devnum}" "${prefix}dtb/${overlay_path}/overlay/${pre}-${overlay}.dtbo"; then
 				if load "${devtype}" "${devnum}" "${scriptaddr}" "${prefix}dtb/${overlay_path}/overlay/${pre}-${overlay}.dtbo"; then
 					echo "Applying kernel provided DT overlay ${pre}-${overlay}.dtbo"
-					fdt apply "${scriptaddr}" || setenv overlay_error "true"
+					if fdt apply "${scriptaddr}"; then
+						if test -e "${devtype}" "${devnum}" "${prefix}dtb/${overlay_path}/overlay/${pre}-${overlay}.scr"; then
+							if load "${devtype}" "${devnum}" "${scriptaddr}" "${prefix}dtb/${overlay_path}/overlay/${pre}-${overlay}.scr"; then
+								echo "Applying kernel provided DT overlay fixup script ${pre}-${overlay}.scr"
+								source "${scriptaddr}" || setenv overlay_error "true"
+							fi
+						fi
+					else
+						setenv overlay_error "true"
+					fi
 				fi
+				break
 			fi
 		done
 	done
@@ -57,21 +63,6 @@ if test -n "${overlays}${user_overlays}"; then
 	if test "${overlay_error}" = "true"; then
 		echo "Error applying DT overlays, restoring original DT"
 		load "${devtype}" "${devnum}" "${fdt_addr_r}" "${prefix}dtb/${fdtfile}"
-	else
-		for pre in ${overlay_prefix}; do
-			if test -e "${devtype}" "${devnum}" "${prefix}dtb/${overlay_path}/overlay/${pre}-fixup.scr"; then
-				if load "${devtype}" "${devnum}" "${scriptaddr}" "${prefix}dtb/${overlay_path}/overlay/${pre}-fixup.scr"; then
-					echo "Applying kernel provided DT fixup script ${pre}-fixup.scr"
-					source "${scriptaddr}"
-				fi
-			fi
-		done
-		if test -e "${devtype}" "${devnum}" "${prefix}fixup.scr"; then
-			if load "${devtype}" "${devnum}" "${scriptaddr}" "${prefix}fixup.scr"; then
-				echo "Applying user provided DT fixup script fixup.scr"
-				source "${scriptaddr}"
-			fi
-		fi
 	fi
 fi
 

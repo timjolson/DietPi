@@ -3,13 +3,14 @@
 . /boot/dietpi/func/dietpi-globals || exit 1
 Error_Exit(){ G_DIETPI-NOTIFY 1 "$1, aborting ..."; exit 1; }
 
-[[ $1 ]] && PLATFORM=$1
-[[ $PLATFORM ]] || { G_WHIP_DEFAULT_ITEM='rpi1-sdl2' G_WHIP_INPUTBOX 'Enter platform (default: "rpi1-sdl2"): https://github.com/BlitterStudio/amiberry/blob/master/Makefile'; PLATFORM=$G_WHIP_RETURNED_VALUE; }
-G_DIETPI-NOTIFY 2 "Amiberry will be built for platform: \e[33m$PLATFORM"
-
 # Apply GitHub token if set
 header=()
 [[ $GH_TOKEN ]] && header=('-H' "Authorization: token $GH_TOKEN")
+
+# Inputs
+[[ $1 ]] && PLATFORM=$1
+[[ $PLATFORM ]] || { G_WHIP_DEFAULT_ITEM='rpi1-sdl2' G_WHIP_INPUTBOX 'Enter platform (default: "rpi1-sdl2"): https://github.com/BlitterStudio/amiberry/blob/master/Makefile'; PLATFORM=$G_WHIP_RETURNED_VALUE; }
+G_DIETPI-NOTIFY 2 "Amiberry will be built for platform: \e[33m$PLATFORM"
 
 # APT dependencies
 # - wget: Used for WHDLoad database update: https://github.com/BlitterStudio/amiberry/commit/d6c103e
@@ -93,8 +94,8 @@ G_EXEC tar xf master.tar.gz
 G_EXEC rm master.tar.gz
 G_EXEC cd capsimg-master
 # RISC-V: "checking build system type... ./config.guess: unable to guess system type"
-G_EXEC curl -sSfo CAPSImg/config.guess 'https://gitweb.git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=HEAD'
-G_EXEC curl -sSfo CAPSImg/config.sub 'https://gitweb.git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD'
+G_EXEC curl -sSfo CAPSImg/config.guess 'https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.guess'
+G_EXEC curl -sSfo CAPSImg/config.sub 'https://cgit.git.savannah.gnu.org/cgit/config.git/plain/config.sub'
 G_EXEC_OUTPUT=1 G_EXEC ./bootstrap
 G_EXEC_OUTPUT=1 G_EXEC ./configure C{,XX}FLAGS='-g0 -O3'
 G_EXEC_OUTPUT=1 G_EXEC make "-j$(nproc)"
@@ -154,7 +155,7 @@ echo '/mnt/dietpi_userdata/amiberry/conf/amiberry.conf' > "$DIR/DEBIAN/conffiles
 
 # - prerm
 cat << '_EOF_' > "$DIR/DEBIAN/prerm"
-#!/bin/sh
+#!/bin/dash -e
 if [ "$1" = 'remove' ] && [ -d '/run/systemd/system' ] && [ -f '/lib/systemd/system/amiberry.service' ]
 then
 	echo 'Deconfiguring Amiberry systemd service ...'
@@ -165,7 +166,7 @@ _EOF_
 
 # - postrm
 cat << '_EOF_' > "$DIR/DEBIAN/postrm"
-#!/bin/sh
+#!/bin/dash -e
 if [ "$1" = 'purge' ] && [ -d '/etc/systemd/system/amiberry.service.d' ]
 then
 	echo 'Removing Amiberry systemd service overrides ...'
@@ -191,7 +192,7 @@ G_EXEC curl -sSfo package.deb "https://dietpi.com/downloads/binaries/$G_DISTRO_N
 old_version=$(dpkg-deb -f package.deb Version)
 G_EXEC rm package.deb
 suffix=${old_version#*-dietpi}
-[[ $old_version == "$v_ami-"* ]] && v_ami+="-dietpi$((suffix+1))" || v_ami+="-dietpi1"
+[[ $old_version == "$v_ami-"* ]] && v_ami+="-dietpi$((suffix+1))" || v_ami+='-dietpi1'
 G_DIETPI-NOTIFY 2 "Old package version is:       \e[33m${old_version:-N/A}"
 G_DIETPI-NOTIFY 2 "Building new package version: \e[33m$v_ami"
 

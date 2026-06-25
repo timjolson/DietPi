@@ -147,22 +147,14 @@
 		# End user automated script
 		if [[ -f '/boot/Automation_Custom_PreScript.sh' ]]
 		then
-			G_DIETPI-NOTIFY 2 'Running custom script, please wait ...'
+			G_DIETPI-NOTIFY 2 'Running /boot/Automation_Custom_PreScript.sh, please wait...'
 			chmod +x /boot/Automation_Custom_PreScript.sh
-			if /boot/Automation_Custom_PreScript.sh 2>&1 | tee /var/tmp/dietpi/logs/dietpi-automation_custom_prescript.log
-			then
-				G_DIETPI-NOTIFY 0 'Custom script'
-			else
-				G_DIETPI-NOTIFY 1 'Custom script: Please see the log file for more information:
-         - /var/tmp/dietpi/logs/dietpi-automation_custom_prescript.log'
-			fi
+			/boot/Automation_Custom_PreScript.sh
+			G_DIETPI-NOTIFY -1 $? '/boot/Automation_Custom_PreScript.sh'
 		fi
 
 		# Apply swap settings
 		/boot/dietpi/func/dietpi-set_swapfile
-
-		# Apply headless mode if set in dietpi.txt (RPi, Odroid C1/C2)
-		(( $G_HW_MODEL < 11 || $G_HW_MODEL == 12 )) && /boot/dietpi/func/dietpi-set_hardware headless "$(grep -cm1 '^[[:blank:]]*AUTO_SETUP_HEADLESS=1' /boot/dietpi.txt)"
 
 		# Set hostname
 		/boot/dietpi/func/change_hostname "$(sed -n '/^[[:blank:]]*AUTO_SETUP_NET_HOSTNAME=/{s/^[^=]*=//p;q}' /boot/dietpi.txt)"
@@ -338,7 +330,7 @@ _EOF_
 		# x86_64 BIOS: Set GRUB install device: https://github.com/MichaIng/DietPi/issues/4542
 		if (( $G_HW_ARCH == 10 )) && dpkg-query -s grub-pc &> /dev/null
 		then
-			local root_drive=$(lsblk -npo PKNAME "$(findmnt -Ufvnro SOURCE -M /)")
+			local root_drive=$(lsblk -npo PKNAME "$(findmnt -Ufvnro SOURCE /)")
 			[[ $root_drive == '/dev/'* ]] && debconf-set-selections <<< "grub-pc grub-pc/install_devices multiselect $root_drive"
 		fi
 	}

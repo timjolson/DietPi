@@ -34,15 +34,15 @@
 	echo '[ INFO ] Remounting root filesystem R/W'
 	mount -vo remount,rw /
 
-	echo '[ INFO ] Splitting output to /var/tmp/dietpi/logs/fs_partition_resize.log'
-	mkdir -pv /var/tmp/dietpi/logs
+	echo '[ INFO ] Splitting output to /var/lib/dietpi/logs/fs_partition_resize.log'
+	mkdir -pv /var/lib/dietpi/logs
 	{
 	# ---------------------------------------------------------
 	echo '[ INFO ] Disabling this service to prevent possible endless loop in case of failure'
 	rm -Rfv /etc/systemd/system/*.wants/dietpi-fs_partition_resize.service
 
 	echo '[ INFO ] Obtaining root filesystem device'
-	ROOT_DEV=$(findmnt -Ufvnro SOURCE -M /)
+	ROOT_DEV=$(findmnt -Ufvnro SOURCE /)
 
 	echo '[ INFO ] Detecting root partition and parent drive for supported naming schemes'
 	# - SCSI/SATA:   /dev/sd[a-z][1-9]
@@ -136,7 +136,7 @@
 	fi
 
 	echo '[ INFO ] Detecting root filesystem type'
-	ROOT_FSTYPE=$(findmnt -Ufnro FSTYPE -M /)
+	ROOT_FSTYPE=$(findmnt -Ufnro FSTYPE /)
 
 	# Maximise root filesystem if type is supported
 	case $ROOT_FSTYPE in
@@ -174,7 +174,7 @@
 		;;
 	esac
 	# ---------------------------------------------------------
-	} &> >(tee -a /var/tmp/dietpi/logs/fs_partition_resize.log); wait $! # Method from dietpi-update to avoid commands running in a subshell, breaking script exits and implying variable changes remaining local
+	} &> >(tee -a /var/lib/dietpi/logs/fs_partition_resize.log); wait $! # Method from dietpi-update to avoid commands running in a subshell, breaking script exits and implying variable changes remaining local
 
 	exit "$EXIT_CODE"
 }
