@@ -389,14 +389,6 @@ if (( $G_DIETPI_VERSION_CORE < 9 || ( $G_DIETPI_VERSION_CORE == 9 && $G_DIETPI_V
 then
 	if (( $G_HW_MODEL < 10 || ( $G_HW_MODEL == 75 && ${G_RASPBIAN:-0} == 1 ) )) || [[ -f '/etc/apt/sources.list.d/raspi.list' ]]
 	then
-		G_DIETPI-NOTIFY 2 'Blocking conflicting Raspberry Pi desktop packages'
-		# - https://github.com/MichaIng/DietPi/issues/1558#issuecomment-691206284
-		# - https://github.com/MichaIng/DietPi/issues/4687
-		G_EXEC eval 'cat << '\''_EOF_'\'' > /etc/apt/preferences.d/dietpi-raspberrypi
-Package: src:openbox src:obconf src:pcmanfm src:libfm src:gtk* src:lx*
-Pin: origin archive.raspberrypi.com
-Pin-Priority: -1
-_EOF_'
 		[[ -f '/etc/apt/preferences.d/dietpi-lxde' ]] && G_EXEC rm /etc/apt/preferences.d/dietpi-lxde
 		G_DIETPI-NOTIFY 2 'Updating Raspberry Pi APT repository list'
 		G_EXEC eval "echo 'deb https://archive.raspberrypi.com/debian ${G_DISTRO_NAME/forky/trixie} main' > /etc/apt/sources.list.d/raspi.list"
@@ -553,30 +545,6 @@ then
 		G_EXEC rm mosquitto-repo.gpg
 		G_EXEC eval "echo 'deb https://repo.mosquitto.org/debian $G_DISTRO_NAME main' > /etc/apt/sources.list.d/dietpi-mosquitto.list"
 	fi
-	if [[ -f '/boot/dietpi/.installed' ]] && grep -q '^[[:blank:]]*aSOFTWARE_INSTALL_STATE\[111\]=2' /boot/dietpi/.installed
-	then
-		G_DIETPI-NOTIFY 2 'Adding UrBackup APT repository'
-		# APT distro
-		distro='Debian_'
-		(( $G_HW_ARCH == 1 )) && distro='Raspbian_'
-		case $G_DISTRO in
-			6) distro+='11';;
-			7) distro+='12';;
-			*) (( $G_HW_ARCH == 1 )) && distro+='12' || distro+='13';;
-		esac
-		# APT key
-		G_EXEC mkdir -p /etc/apt/keyrings
-		G_EXEC curl -sSfLo /etc/apt/keyrings/dietpi-urbackup.asc "https://download.opensuse.org/repositories/home:/uroni/$distro/Release.key"
-		# APT source
-		G_EXEC eval "cat << '_EOF_' > /etc/apt/sources.list.d/dietpi-urbackup.sources
-Types: deb
-URIs: https://download.opensuse.org/repositories/home:/uroni/$distro
-Suites: /
-Signed-By: /etc/apt/keyrings/dietpi-urbackup.asc
-_EOF_"
-		# Beta cleanup
-		[[ -f '/etc/apt/sources.list.d/dietpi-urbackup.list' ]] && G_EXEC rm /etc/apt/sources.list.d/dietpi-urbackup.list
-	fi
 fi
 
 # v9.20
@@ -679,6 +647,52 @@ if (( $G_DIETPI_VERSION_CORE < 10 || ( $G_DIETPI_VERSION_CORE == 10 && $G_DIETPI
 then
 	G_DIETPI-NOTIFY 2 'Pre-creating new persistent DietPi logs directory'
 	G_EXEC mkdir -p /var/lib/dietpi/logs
+fi
+
+# v10.6
+if (( $G_DIETPI_VERSION_CORE < 10 || ( $G_DIETPI_VERSION_CORE == 10 && $G_DIETPI_VERSION_SUB < 6 ) ))
+then
+	if [[ -f '/boot/dietpi/.installed' ]] && grep -q '^[[:blank:]]*aSOFTWARE_INSTALL_STATE\[111\]=2' /boot/dietpi/.installed
+	then
+		G_DIETPI-NOTIFY 2 'Adding/Updating UrBackup APT repository and key'
+		# APT distro
+		distro='Debian_'
+		(( $G_HW_ARCH == 1 )) && distro='Raspbian_'
+		case $G_DISTRO in
+			7) distro+='12';;
+			8) distro+='13';;
+			*) (( $G_HW_ARCH == 10 )) && distro+='Testing' || distro+='13';;
+		esac
+		# APT key
+		G_EXEC mkdir -p /etc/apt/keyrings
+		G_EXEC curl -sSfLo /etc/apt/keyrings/dietpi-urbackup.asc "https://download.opensuse.org/repositories/home:/uroni/$distro/Release.key"
+		# APT source
+		G_EXEC eval "cat << '_EOF_' > /etc/apt/sources.list.d/dietpi-urbackup.sources
+Types: deb
+URIs: https://download.opensuse.org/repositories/home:/uroni/$distro
+Suites: /
+Signed-By: /etc/apt/keyrings/dietpi-urbackup.asc
+_EOF_"
+		# Beta cleanup
+		[[ -f '/etc/apt/sources.list.d/dietpi-urbackup.list' ]] && G_EXEC rm /etc/apt/sources.list.d/dietpi-urbackup.list
+	fi
+fi
+
+# v10.7
+if (( $G_DIETPI_VERSION_CORE < 10 || ( $G_DIETPI_VERSION_CORE == 10 && $G_DIETPI_VERSION_SUB < 7 ) ))
+then
+	if (( $G_HW_MODEL < 10 || ( $G_HW_MODEL == 75 && ${G_RASPBIAN:-0} == 1 ) )) || [[ -f '/etc/apt/sources.list.d/raspi.list' ]]
+	then
+		G_DIETPI-NOTIFY 2 'Blocking conflicting Raspberry Pi desktop packages'
+		# - https://github.com/MichaIng/DietPi/issues/1558#issuecomment-691206284
+		# - https://github.com/MichaIng/DietPi/issues/4687
+		# and cups-filters: https://github.com/MichaIng/DietPi/issues/8245
+		G_EXEC eval 'cat << '\''_EOF_'\'' > /etc/apt/preferences.d/dietpi-raspberrypi
+Package: src:cups-filters src:openbox src:obconf src:pcmanfm src:libfm src:gtk* src:lx*
+Pin: origin archive.raspberrypi.com
+Pin-Priority: -1
+_EOF_'
+	fi
 fi
 
 exit 0
